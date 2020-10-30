@@ -34,3 +34,6 @@ INTO INDEX.HTML:
 
 - jquery is installed using npm. But also accessed throught CDN (botton of index.html)
   Uninstall jquery if its not used.
+
+
+test
