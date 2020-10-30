@@ -1,0 +1,119 @@
+body {
+  font-family: "Montserrat", sans-serif;
+}
+h1 {
+  font-size: 3.5rem;
+  line-height: 1.5;
+  font-weight: bold;
+}
+h2 {
+  font-family: "Montserrat-bold", "Montserrat", sans-serif;
+  font-weight: bold;
+  padding: 5% 0 0;
+}
+
+/* ---- Navbar ----*/
+.logo-image {
+
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+.navbar-text {
+  font-size: 1.2rem;
+  margin: 0 1rem;
+}
+
+
+/* ---- Main Window ---- */
+.main-window {
+  position: relative;
+  background-color: #eeeeee;
+  height: 815px;
+  width: 100%;
+  margin: 0;
+}
+
+.window-background {
+  position: absolute;
+  height: 415px;
+  text-align: center;
+}
+
+.layer-2 {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+/* -- Window: Data Visualization -- */
+#window-data {
+  background-color: red;
+  position: relative;
+  height: 415px;
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  z-index: 1;
+  display: none;
+}
+
+/* -- Window: Commands -- */
+#window-commands {
+  background-color: #32e0c4;
+  position: relative;
+  height: 415px;
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  z-index: 1;
+  display: none;
+}
+.command-input {
+  width: 30%;
+  margin: auto;
+}
+.command-btn {
+  margin: 1rem;
+}
+
+/* --- Chart --- */
+#chart {
+  position: absolute;
+  bottom: 0;
+  height: 400px;
+  width: 100%;
+}
+
+
+
+
+
+/* --- Footer --- */
+.footer {
+  background-color: #212121;
+  height: 80px;
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  padding-top: 20px;
+}
+
+.footer-text {
+  color: #FFFFFF;
+}
+
+
+
+/*
+Colors:
+#eeeeee
+#32e0c4
+#0d7377
+#212121
+*/

@@ -1,0 +1,36 @@
+===      Heroku      ===
+// Heroku website:    https://cryptic-crag-95590.herokuapp.com/
+// Setup (in hyper/cmd)
+//    git add .                  add changes
+//    git commit -m ""           add message
+//    git push heroku master     Update website
+
+
+===     TODO List    ===
+
+INTO INDEX.HTML:
+<!--   FIREBASE   -->
+<!-- core Firebase JS -->
+<script src="__/firebase/7.24.0/firebase-app.js"></script>
+<!-- TODO: Add SDKs for Firebase products that you want to use
+   https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="__/firebase/7.24.0/firebase-analytics.js"></script>
+<!-- Initialize Firebase -->
+<script src="__/firebase/init.js"></script>
+
+
+
+---   Less important  ---
+
+- Group constants such as port and host etc to one document.
+  link this document to server.js and client.js etc.
+
+- in HTML:      <script src="socket.io/socket.io.js"></script>
+  Is something like this possible?:
+                <script src="socket.io/socket.io.js" alt="node_modules/socket.io-client/dist/socket.io.js"></script>
+  In english: If file not found on the internet --> Use local file.
+
+- Download Jquery and import it from local files. (See bottom of index.html)
+
+- jquery is installed using npm. But also accessed throught CDN (botton of index.html)
+  Uninstall jquery if its not used.
