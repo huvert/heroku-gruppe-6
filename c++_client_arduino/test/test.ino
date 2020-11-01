@@ -39,6 +39,7 @@ void setup() {
 
   /* Websocket setup
      ex: webSocket.on("identifier", function) */
+
   webSocket.init("192.168.1.12", 4000);
 }
 

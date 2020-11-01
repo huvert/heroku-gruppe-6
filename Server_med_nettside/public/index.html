@@ -52,7 +52,20 @@
     <div class="layer-2">
 
       <div id="window-data">
+        <!-- Scrollable datalog -->
+        <div class="data-log">
+          <table>
+            <thread>
+              <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th onclick"sortColumn('reading')">Reading</th>
+              </tr>
+            </thread>
+            <tbody id="data-log-table"></tbody>
 
+          </table>
+        </div>
 
       </div>
 
@@ -93,12 +106,3 @@
 </body>
 
 </html>
-
-
-<!--
-<ul id="messages"></ul>
-  <form action="">
-    <input id="m" autocomplete="off" /><button>Send</button>
-  </form>
-  <button type="test-button">Click Me!</button>
- -->

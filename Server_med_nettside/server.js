@@ -14,6 +14,7 @@ const io = require('socket.io')(http);
 
 const port = 4000;
 var number_of_users = 0;
+var available_rooms = ["website", "esp"];
 
 // == Setting up server ==
 app.use(express.static(__dirname + '/public/'));                   // Tells express where to look for files (such as stylesheets)
@@ -31,6 +32,14 @@ http.listen(port || 3000, () => {
 io.on("connection", (socket) => {
   number_of_users += 1;
   console.log('a user connected. # users: ' + number_of_users);
+  console.log(socket.nsp.flags);
+
+  socket.on("join-room", (room) => {
+    if (available_rooms.includes(room)) {
+      socket.join(room);
+      console.log("Joined room: " + room);
+    }
+  });
 
   socket.on('disconnect', () => {
     console.log('user disconnectted');
@@ -38,8 +47,20 @@ io.on("connection", (socket) => {
   });
 
   // Messages
-  socket.on('chat message', (msg) => {
+  socket.on('chat-message', (msg) => {
     console.log('message: ' + msg);
     socket.broadcast.emit('chat message', msg);
   });
+
+  // Got data from ESP
+  socket.on('res-data', (data) => {             // Takes the data from esp and broadcasts
+    console.log('data from esp: ' + data);
+    socket.in('website').emit('data->website', data);
+  });
 });
+
+// Request data from all ESP clients
+setInterval(() => {
+  console.log("Requested Data from client");
+  io.in('esp').emit('req-data', null);
+}, 10000);

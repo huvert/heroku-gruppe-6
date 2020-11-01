@@ -1,11 +1,25 @@
 const io = require("socket.io-client");
 
-let socket = io.connect("http://82.164.163.64:22");     // Creates websocket connection to server
+let socket = io.connect("http://192.168.1.12:4000");     // Creates websocket connection to server
 
+socket.emit("join-room", "esp");  // Request to join room: website
 
-socket.on('chat message', (msg) => {
+socket.on('chat-message', (msg) => {
   console.log("Received: " + msg);
 });
+socket.on("data->website", (data) => {
+  console.log("[data S->C] "+data);
+});
+socket.on("website", (data) => {
+  console.log("data: ", data);
+});
 
+
+// TEST
+socket.on('req-data', (data) => {
+  // GET DATA FROM ESP HERE
+  console.log("get-data --> data from esp")
+  socket.emit("res-data", "4#01#11#2020#19:44");
+});
 
 // My local ip address:   "http://192.168.1.12:4000"

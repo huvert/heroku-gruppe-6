@@ -1,22 +1,12 @@
-===      Heroku      ===
-// Heroku website:    https://cryptic-crag-95590.herokuapp.com/
-// Setup (in hyper/cmd)
-//    git add .                  add changes
-//    git commit -m ""           add message
-//    git push heroku master     Update website
-
-
 ===     TODO List    ===
 
-INTO INDEX.HTML:
-<!--   FIREBASE   -->
-<!-- core Firebase JS -->
-<script src="__/firebase/7.24.0/firebase-app.js"></script>
-<!-- TODO: Add SDKs for Firebase products that you want to use
-   https://firebase.google.com/docs/web/setup#available-libraries -->
-<script src="__/firebase/7.24.0/firebase-analytics.js"></script>
-<!-- Initialize Firebase -->
-<script src="__/firebase/init.js"></script>
+- Group functions in index.js into a single objective (myFuncs).
+  Other .js files imported to website might have its own functions with the same name.
+
+- inside index.js:  var dataTable should be created with data from server -> firebase.
+  Upon loading the website should create dataTable from firebase.
+  it will then be updated every time esp sends new data to the server.
+  Consider creating a new function for creating dataTable.
 
 
 
@@ -30,10 +20,21 @@ INTO INDEX.HTML:
                 <script src="socket.io/socket.io.js" alt="node_modules/socket.io-client/dist/socket.io.js"></script>
   In english: If file not found on the internet --> Use local file.
 
-- Download Jquery and import it from local files. (See bottom of index.html)
+- Download Jquery and import it from local files. (See bottom of index.html) (Optional)
 
 - jquery is installed using npm. But also accessed throught CDN (botton of index.html)
   Uninstall jquery if its not used.
 
 
-test
+
+
+  Setup firebase ...  (??)
+  INTO INDEX.HTML:
+  <!--   FIREBASE   -->
+  <!-- core Firebase JS -->
+  <script src="__/firebase/7.24.0/firebase-app.js"></script>
+  <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+  <script src="__/firebase/7.24.0/firebase-analytics.js"></script>
+  <!-- Initialize Firebase -->
+  <script src="__/firebase/init.js"></script>
