@@ -23,11 +23,16 @@
     <button class="navbar-toggler ml-auto" data-toggle="collapse" data-target="#collapse_target">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <!-- Links -->
+    <!-- navbar buttons -->
     <div class="collapse navbar-collapse" id="collapse_target">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link navbar-text" href="#">Link 1</a>
+          <a class="nav-link navbar-text" id="nav-admin" href="#">Admin</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link navbar-text" id="nav-log" href="#">Log</a>
         </li>
       </ul>
       <ul class="navbar-nav">
@@ -51,7 +56,16 @@
     <!-- Navbar buttons shows and hides elements in this layer -->
     <div class="layer-2">
 
-      <div id="window-data">
+      <div id="window-admin">
+        <div id="admin-container">
+          <p>This button is for admins.<br>If you are not admin:<br>DO NOT PRESS THE BUTTON!</p>
+          <button class="btn btn-danger admin-btn">Gain Admin<br>Access</button>
+        </div>
+        <div id="rick-rolled">
+        </div>
+      </div>
+
+      <div id="window-log">
         <!-- Scrollable datalog -->
         <div class="data-log">
           <table>
@@ -63,12 +77,26 @@
               </tr>
             </thread>
             <tbody id="data-log-table"></tbody>
-
           </table>
         </div>
-
       </div>
 
+      <div id="window-data">
+        <!-- 2 x 2 grid when dekstop. 4 x 1 tablet / phone -->
+        <div class="row">
+          <div class="data-header">
+            <p>Overskrift elns</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-6 data-grid">
+            <div id="line-chart"></div>
+          </div>
+          <div class="col-lg-6 data-grid ">
+            <div id="scatterplot"></div>
+          </div>
+        </div>
+      </div>
 
       <div id="window-commands">
         <div>
@@ -89,7 +117,7 @@
     <div class"window-background">
       <h1>Hello there</h1>
     </div>
-    <div id="chart"></div>
+
   </div>
 
 
@@ -102,6 +130,7 @@
   <!-- node-modules -->
   <script src="scripts/plotly.js-dist/plotly.js"></script>
   <script src="socket.io/socket.io.js"></script>
+  
   <script src="index.js" charset="utf-8"></script>       <!-- Loads index.js to broswer -->
 </body>
 

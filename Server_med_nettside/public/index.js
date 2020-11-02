@@ -2,7 +2,7 @@
 
 const HOST = "http://192.168.1.12:4000"
 var prev_data_reading = null; // Last updated data
-maxDataTableSize = 4; // How many readings the website should hold.
+maxDataTableSize = 20; // How many readings the website should hold.
 indexCounter = 0; // Used to keep track on which index to delete from table.
 
 var dataTable = [
@@ -22,6 +22,12 @@ myFuncs = {
     }
     if (filter !== "data") {
       $("#window-data").slideUp(200);
+    }
+    if (filter !== "admin") {
+      $("#window-admin").slideUp(200);
+    }
+    if (filter !== "log") {
+      $("#window-log").slideUp(200);
     }
   }
 };
@@ -66,7 +72,8 @@ function handleLevelSensorData(data) {
 }
 
 
-// ===  Socket IO   ===
+// ====================================
+// ===          Socket IO           ===
 $(function() {          // Waits for document to fully load before executing any JS code
   var socket = io.connect();
   socket.emit("join-room", "website");  // Request to join room: website
@@ -78,6 +85,15 @@ $(function() {          // Waits for document to fully load before executing any
     return false;
   });
 
+  $("#nav-data").on("click", function() {
+    console.log("req-scater-plot");
+    socket.emit('req-scatter-plot', "");
+  });
+
+  socket.on('res-scatter-plot', (data) => {
+    console.log("res-scatter-plot");
+    $('#scatterplot').html(data);
+  });
 
   socket.on("data->website", (data) =>{     // data comes in format: "måling#day#month#year#clock"
     console.log("received data from server");
@@ -86,32 +102,35 @@ $(function() {          // Waits for document to fully load before executing any
   });
 
 
+  // ====================================
+  // ===           Plots              ===
 
-//  ===   Plotly Graph setup  ===
-var layout = {
+//  ===   Plotly Line-Graph setup  ===
+var cnt = 0;
+const slide_length = 100         // Lenght before slides starts
+
+var line_layout = {
   title: "Fancy Swancy Graph",
   paper_bgcolor: '#32e0c4',
   plot_bgcolor: '#eeeeee',
   xaxis: {title: 'Time [s]'},
-  yaxis: {title: 'Preassure [Pa]'}
+  yaxis: {title: 'Preassure [Pa]'},
+  height: 600,
+  width: 950,
 };
-Plotly.plot('chart',[{          // Creates original chart
+Plotly.plot('line-chart',[{          // Creates original line-chart
     y:[getPreviousReading()],
     type:'line',
     fill: 'tozeroy',
     line: {color: '#112d4e'},
-}],layout);
+}],line_layout);
 
-var cnt = 0;
-const slide_length = 100         // Lenght before slides starts
-
-
-  // === Plotly graph update values ===
+  // -- Plotly graph update values --
   setInterval(function(){
-      Plotly.extendTraces('chart',{ y:[[getPreviousReading()]]}, [0]);     // Extends chart
+      Plotly.extendTraces('line-chart',{ y:[[getPreviousReading()]]}, [0]);     // Extends line-chart
       cnt++;
       if(cnt > slide_length) {
-          Plotly.relayout('chart',{
+          Plotly.relayout('line-chart',{
               xaxis: {
                   range: [cnt-slide_length,cnt]
               }
@@ -122,18 +141,40 @@ const slide_length = 100         // Lenght before slides starts
 
 
 
+
+// ====================================
+// ===          Animations          ===
+
 // ===  Navbar Links and Animations  ===
 $("#nav-logo").on("click", function() {
   myFuncs.hide_all_windows();
 });
 
 $("#nav-commands").on("click", function() {
-  console.log("commands pressed")
   myFuncs.hide_all_windows("commands");
   $("#window-commands").slideDown(200);
+});
+
+$("#nav-log").on("click", function() {
+  myFuncs.hide_all_windows("log");
+  $("#window-log").slideDown(200);
 });
 
 $("#nav-data").on("click", function() {
   myFuncs.hide_all_windows("data");
   $("#window-data").slideDown(200);
-})
+});
+
+$("#nav-admin").on("click", function() {
+  myFuncs.hide_all_windows("admin");
+  $("#rick-rolled").html('');
+  $("#admin-container").show();
+  $("#window-admin").slideDown(200);
+});
+
+// ===  Other buttons and animations  ===
+$(".admin-btn").on("click", function() {
+  console.log("HELLO");
+  $("#admin-container").hide();
+  $("#rick-rolled").html('<div class="iframe-container"><iframe src="https://www.youtube.com/embed/BBJa32lCaaY?autoplay=1&rel=0&controls=0&disablekb=1" width="560" height="315" frameborder="0" allow="autoplay"></iframe></div>');
+});

@@ -16,6 +16,7 @@ const port = 4000;
 var number_of_users = 0;
 var available_rooms = ["website", "esp"];
 
+
 // == Setting up server ==
 app.use(express.static(__dirname + '/public/'));                   // Tells express where to look for files (such as stylesheets)
 app.use('/scripts', express.static(__dirname + '/node_modules/'));
@@ -49,7 +50,7 @@ io.on("connection", (socket) => {
   // Messages
   socket.on('chat-message', (msg) => {
     console.log('message: ' + msg);
-    socket.broadcast.emit('chat message', msg);
+    socket.broadcast.emit('chat-message', msg);
   });
 
   // Got data from ESP
@@ -57,9 +58,16 @@ io.on("connection", (socket) => {
     console.log('data from esp: ' + data);
     socket.in('website').emit('data->website', data);
   });
+
+  // Scatterplot data
+  socket.on('req-scatter-plot', () => {
+    console.log("res-scatter-plot");
+    // data = getScatterplotData(); elns :)             <-- TODO: Request scatterplotdata. This data should be in 2 lists ex: "[1,2,3]#[4,5,6]"
+    socket.emit('res-scatter-plot', "data");
+  });
 });
 
-// Request data from all ESP clients
+// Request data from all ESP clients    (Not sure if this is going to be used)
 setInterval(() => {
   console.log("Requested Data from client");
   io.in('esp').emit('req-data', null);

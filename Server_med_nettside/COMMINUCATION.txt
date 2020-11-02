@@ -1,13 +1,15 @@
 
 
-CMD             FROM          TO            ROOMS         Description
+CMD                 FROM          TO            ROOMS         Description
 ==========================================================================================
-"join-room"     clients       server        ALL           Request to join a room (rooms are used to filter trafic)
-"chat-message"  clients       clients       ALL           Broadcast message to all clients
-"req-data"      server        esp-client    esp           Request data from esp
-"res-data"      esp-client    server        esp           Response from esp (data)
-"data->website" server        website       website       Sends data from server to Website
+"join-room"         clients       server        ALL           Request to join a room (rooms are used to filter trafic)
+"chat-message"      clients       clients       ALL           Broadcast message to all clients
+"req-data"          server        esp-client    esp           Request data from esp
+"res-data"          esp-client    server        esp           Response from esp (data)
+"data->website"     server        website       website       Sends data from server to Website
+"req-scatter-plot"  website       server                      Request to get scatterplotdata from server
+"res-scatter-plot"  server        website (*)                 Response. Sends scatter-plot data
 
-
+*sends only to the client that requested the data.
 
 Data format: måling#day#month#year#05:20:40

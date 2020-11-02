@@ -13,7 +13,7 @@ h2 {
 }
 
 td, th {
-  borger: 1px solid #cccccc;
+  border: 1px solid #cccccc;
   padding: 8px;
 }
 
@@ -61,6 +61,7 @@ table {
   height: 815px;
   width: 100%;
   margin: 0;
+  overflow: auto;
 }
 
 .window-background {
@@ -76,11 +77,53 @@ table {
   z-index: 1;
 }
 
-/* -- Window: Data Visualization -- */
-#window-data {
+/* -- Window: Admin -- */
+#window-admin {
   background-color: #32e0c4;
   position: relative;
-  height: 415px;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  z-index: 1;
+  display: none;
+}
+
+.admin-btn {
+    width: 140px;
+    height: 140px;
+    padding: 10px 16px;
+    border-radius: 70px;
+    font-size: 20px;
+    text-align: center;
+}
+
+#admin-container {
+  padding: 180px;
+  text-align: center;
+}
+
+#rick-rolled {}     /* Used by jquery */
+
+.iframe-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0;
+}
+
+.iframe-container iframe {
+  position: absolute;
+  top: 0;
+  left 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* -- Window: Log -- */
+#window-log {
+  background-color: #32e0c4;
+  position: relative;
+  height: 100%;
   width: 100%;
   margin: 0;
   z-index: 1;
@@ -94,9 +137,43 @@ table {
   overflow-y: scroll;
 }
 
-#data-log-table {
+#data-log-table {}   /* Used by jquery */
+
+/* -- Window: Data Visualization -- */
+#window-data {
+  overflow: hidden;
+  background-color: #32e0c4;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  z-index: 1;
+  display: none;
+}
+
+.data-header {
+  width: 100%;
+  height: 15em;
+  background-color: red;
+}
+
+/* --- Charts --- */
+#line-chart {
 
 }
+
+#scatterplot {
+
+}
+
+.data-grid {
+  height: 40em;
+}
+
+.black {
+  background-color: black;
+}
+
 
 /* -- Window: Commands -- */
 #window-commands {
@@ -117,13 +194,7 @@ table {
   margin: 1rem;
 }
 
-/* --- Chart --- */
-#chart {
-  position: absolute;
-  bottom: 0;
-  height: 400px;
-  width: 100%;
-}
+
 
 
 
@@ -131,12 +202,15 @@ table {
 
 /* --- Footer --- */
 .footer {
+  position: absolute;
+  botton: 0;
   background-color: #212121;
   height: 80px;
   width: 100%;
   margin: 0;
   text-align: center;
   padding-top: 20px;
+  z-index: 2;
 }
 
 .footer-text {

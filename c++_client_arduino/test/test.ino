@@ -4,7 +4,7 @@
 
 #include <SocketIoClient.h> //Import the Socket.io library, this also imports all the websockets
 
-QuickSocket webSocket; //Decalre an instance of the Socket.io library
+SocketIoClient webSocket; //Decalre an instance of the Socket.io library
 
 /*
 void event(const char * payload, size_t length) { //Default event, what happens when you connect
@@ -14,6 +14,10 @@ void event(const char * payload, size_t length) { //Default event, what happens 
 const char* SSID = "a";
 const char* passwd = "password";
 
+void event(const char * payload, size_t length) //Default event, what happens when you connect
+{
+    Serial.printf("got message: %s\n", payload);
+}
 
 void setup() {
   /* Basic arduino setup*/
