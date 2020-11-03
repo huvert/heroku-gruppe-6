@@ -15,6 +15,26 @@ const io = require('socket.io')(http);
 const port = 4000;
 var number_of_users = 0;
 var available_rooms = ["website", "esp"];
+var current_time = new Date();
+
+// ==       Time        ==
+function getClock() {
+  return `${current_time.getHours()}:${current_time.getMinutes()}:${current_time.getSeconds()}`
+}
+
+function wrapDataWithClock(data) {
+  data = data.toString();
+  return `${data}#${getClock()}`
+}
+
+function wrapDataWithDate(data) {
+  data = data.toString();
+  return `${data}#${current_time.getDate()}#${current_time.getMonth()}#${current_time.getYear()}`
+}
+
+function wrapDataWithClockAndDate(data) {   // returns: data#day#month#year#05:20:40
+  return `${wrapDataWithDate(data)}#${getClock()}`
+}
 
 
 // == Setting up server ==
@@ -77,6 +97,7 @@ io.on("connection", (socket) => {
 
 // Request data from all ESP clients    (Not sure if this is going to be used)
 setInterval(() => {
-  console.log("Requested Data from client");
+  let t = wrapDataWithClockAndDate("1924");
+  console.log(`Requested Data from client  [${t}]`);
   io.in('esp').emit('req-data', null);
 }, 10000);
