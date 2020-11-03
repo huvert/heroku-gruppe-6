@@ -102,8 +102,8 @@ $(function() {          // Waits for document to fully load before executing any
   });
 
 
-  // ====================================
-  // ===           Plots              ===
+// ====================================
+// ===           Plots              ===
 
 //  ===   Plotly Line-Graph setup  ===
 var cnt = 0;

@@ -36,6 +36,8 @@ io.on("connection", (socket) => {
   console.log(socket.nsp.flags);
 
   socket.on("join-room", (room) => {
+    console.log("[JOIN ROOM]");
+    console.log("[JOIN-ROOM] a client requested to join room. Room: ");
     if (available_rooms.includes(room)) {
       socket.join(room);
       console.log("Joined room: " + room);
@@ -64,6 +66,12 @@ io.on("connection", (socket) => {
     console.log("res-scatter-plot");
     // data = getScatterplotData(); elns :)             <-- TODO: Request scatterplotdata. This data should be in 2 lists ex: "[1,2,3]#[4,5,6]"
     socket.emit('res-scatter-plot', "data");
+  });
+
+  // FOR TESTING OF ESP
+  socket.on('data->server', (data) => {
+    console.log(typeof(data));
+    console.log(data);
   });
 });
 
