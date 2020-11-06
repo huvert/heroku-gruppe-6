@@ -1,3 +1,4 @@
+
 body {
   font-family: "Montserrat", sans-serif;
 }
@@ -10,6 +11,9 @@ h2 {
   font-family: "Montserrat-bold", "Montserrat", sans-serif;
   font-weight: bold;
   padding: 5% 0 0;
+}
+h4 {
+  font-weight: bold;
 }
 
 td, th {
@@ -62,6 +66,11 @@ table {
   width: 100%;
   margin: 0;
   overflow: auto;
+  background-image: url("background-img.jpg");
+  background-size: cover;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 .window-background {
@@ -74,7 +83,7 @@ table {
   position: absolute;
   height: 100%;
   width: 100%;
-  z-index: 1;
+  z-index: 2;
 }
 
 /* -- Window: Admin -- */
@@ -84,7 +93,7 @@ table {
   height: 100%;
   width: 100%;
   margin: 0;
-  z-index: 1;
+  z-index: 2;
   display: none;
 }
 
@@ -126,7 +135,7 @@ table {
   height: 100%;
   width: 100%;
   margin: 0;
-  z-index: 1;
+  z-index: 2;
   display: none;
 }
 
@@ -147,7 +156,7 @@ table {
   height: 100%;
   width: 100%;
   margin: 0;
-  z-index: 1;
+  z-index: 2;
   display: none;
 }
 
@@ -183,7 +192,7 @@ table {
   width: 100%;
   margin: 0;
   text-align: center;
-  z-index: 1;
+  z-index: 2;
   display: none;
 }
 .command-input {
@@ -196,7 +205,64 @@ table {
 
 
 
+/* ---   Client selector window   --- */
+.main-container {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: 2;
+}
 
+.client-main-box {
+  background-color: #14b2b8;
+  border-radius: 10px;
+  border: 2px solid black;
+  width: 30%;
+  height: 50%;
+  margin: 8%;
+  overflow: hidden;
+  overflow-y: scroll;
+}
+@media screen and (max-width: 1300px){
+  .client-main-box {
+    width: 50%;
+  }
+}
+@media screen and (max-width: 1024px){
+  .client-main-box {
+    width: 80%;
+  }
+}
+.client-main-box::-webkit-scrollbar {
+  width: 12px;
+}
+.client-main-box::-webkit-scrollbar-thumb {
+  background: #0d7377;
+  border-radius: 6px;
+}
+.client-main-box::-webkit-scrollbar-thumb:hover {
+  background: #212121;
+}
+
+
+#client-log-table {}   /* Used by jquery */
+
+#client-log-table tr:nth-child(even) {
+  background-color: #129ca1;
+}
+#client-log-table tr:hover td {
+  background-color: #212121;
+  color: white;
+}
+#client-log-table tr {
+  height: 70px;
+}
+
+/* --- Background image --- */
+.bg-img {
+  max-height: 100%;
+  max-width: 100%;
+}
 
 
 
@@ -210,7 +276,7 @@ table {
   margin: 0;
   text-align: center;
   padding-top: 20px;
-  z-index: 2;
+  z-index: 3;
 }
 
 .footer-text {

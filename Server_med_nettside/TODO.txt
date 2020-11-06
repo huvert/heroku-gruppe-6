@@ -8,6 +8,8 @@
   it will then be updated every time esp sends new data to the server.
   Consider creating a new function for creating dataTable.
 
+- [Client].click() -> reload datatable (from firebase) & reload graphs (data from firebase)
+
 
 
 ---   Less important  ---

@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <!-- CSS -->
   <link rel="stylesheet" href="css/styles.css">
-  <title>Website</title>
+  <title>Nettside</title>
 </head>
 
 <body>
@@ -32,17 +32,17 @@
       </ul>
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link navbar-text" id="nav-log" href="#">Log</a>
+          <a class="nav-link navbar-text" id="nav-log" href="#">Logg</a>
         </li>
       </ul>
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link navbar-text" id="nav-data" href="#">Data Visualization</a>
+          <a class="nav-link navbar-text" id="nav-data" href="#">Data Visualisering</a>
         </li>
       </ul>
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link navbar-text" id="nav-commands" href="#">Commands</a>
+          <a class="nav-link navbar-text" id="nav-commands" href="#">TEST COMMANDS</a>
         </li>
       </ul>
     </div>
@@ -58,8 +58,8 @@
 
       <div id="window-admin">
         <div id="admin-container">
-          <p>This button is for admins.<br>If you are not admin:<br>DO NOT PRESS THE BUTTON!</p>
-          <button class="btn btn-danger admin-btn">Gain Admin<br>Access</button>
+          <p>Trykk på eget ansvar!</p>
+          <button class="btn btn-danger admin-btn">IKKE<br>TRYKK MEG</button>
         </div>
         <div id="rick-rolled">
         </div>
@@ -71,9 +71,9 @@
           <table>
             <thread>
               <tr>
-                <th>Date</th>
-                <th>Time</th>
-                <th onclick"sortColumn('reading')">Reading</th>
+                <th>Dato</th>
+                <th>Klokkeslett</th>
+                <th onclick"sortColumn('reading')">Data</th>
               </tr>
             </thread>
             <tbody id="data-log-table"></tbody>
@@ -100,7 +100,7 @@
 
       <div id="window-commands">
         <div>
-          <h2>Command</h2>
+          <h2>TEST COMMANDS</h2>
           <p>Skriv inn en melding i chatboksen og send.<br>
             Meldingen vil broadcastes til alle klienter koblet til serveren.<br>
             På denne måten kan klienten programmeres til å respondere til kommandoer uten å måtte endre kode på serversiden.<br>
@@ -113,13 +113,23 @@
       </div>
     </div>
 
+    <div class="main-container">
+      <div class="client-main-box">
+        <table>
+          <thread>
+            <tr>
+              <th><h4>Klienter</h4></th>
+            </tr>
+          </thread>
+          <tbody id="client-log-table">
 
-    <div class"window-background">
-      <h1>Hello there</h1>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-  </div>
 
+  </div>
 
 
   <div class="footer">
@@ -130,7 +140,7 @@
   <!-- node-modules -->
   <script src="scripts/plotly.js-dist/plotly.js"></script>
   <script src="socket.io/socket.io.js"></script>
-  
+
   <script src="index.js" charset="utf-8"></script>       <!-- Loads index.js to broswer -->
 </body>
 

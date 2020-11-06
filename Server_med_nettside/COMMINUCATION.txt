@@ -3,6 +3,7 @@
 CMD                         FROM          TO            ROOMS         Description
 ==========================================================================================
 "join-room"                 clients       server        ALL           Request to join a room (rooms are used to filter trafic)
+                                                                      room#clientID (optinal: Give the client an ID-name)
 "chat-message"              clients       clients       ALL           Broadcast message to all clients
 "req-data"                  server        esp-client    esp           Request data from esp
 "res-data"                  esp-client    server        esp           Response from esp (data)
@@ -10,7 +11,16 @@ CMD                         FROM          TO            ROOMS         Descriptio
 "req-scatter-plot"          website       server                      Request to get scatterplotdata from server
 "res-scatter-plot"          server        website (*)                 Response. Sends scatter-plot data
 "data-levelsensor->server"  esp           server
+"new-client-connected"      server        website       website       Append new client to client list on main page
+"req-client-list"           website       server                      Request list of all clients
+"res-client-list"           server        website (*)                 ^Response to request
+
 
 *sends only to the client that requested the data.
 
 Data format: måling#day#month#year#05:20:40
+
+
+
+Link to BG photo:     Photo by Sorapong Chaipanya from Pexels
+                      https://www.pexels.com/photo/plastic-bottles-with-antiseptic-gels-and-sterile-mask-on-table-4525115/

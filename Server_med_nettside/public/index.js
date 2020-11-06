@@ -5,6 +5,8 @@ var prev_data_reading = null; // Last updated data
 maxDataTableSize = 20; // How many readings the website should hold.
 indexCounter = 0; // Used to keep track on which index to delete from table.
 
+var clients = [];     // Stores clients
+
 var dataTable = [
   { date: 'test1', time: 'test2', reading: 'test3' },   // DELETE
   { date: 'test', time: 'test', reading: 'test' },      // DELETE
@@ -28,6 +30,10 @@ myFuncs = {
     }
     if (filter !== "log") {
       $("#window-log").slideUp(200);
+    }
+    if (filter !== "client-log") {
+      $(".main-container").css("z-index","1");
+      $(".client-main-box").hide();
     }
   }
 };
@@ -71,12 +77,32 @@ function handleLevelSensorData(data) {
   }
 }
 
+// Full update of client-log-table on front page
+function updateClientLogTable() {
+  $("#client-log-table").html("");
+  let dataHtml = '';
+  let len = clients.length;
+  for (let i=0; i<len; ++i) {
+    let client = clients[i];
+    dataHtml = `${dataHtml}<tr><td>${client.clientName}</td></tr>`;
+  }
+  $("#client-log-table").html(dataHtml);
+}
+
+
+
 
 // ====================================
 // ===          Socket IO           ===
 $(function() {          // Waits for document to fully load before executing any JS code
   var socket = io.connect();
   socket.emit("join-room", "website");  // Request to join room: website
+  socket.emit("req-client-list", "");   // require full list of "esp" clients connected to server
+  socket.on("res-client-list", (clients_list) => {
+    clients = JSON.parse(clients_list);
+    console.log(clients);
+    updateClientLogTable();
+  });
 
   $('#command-form').submit(function(e) {
     e.preventDefault();                             // prevents page reloading
@@ -95,11 +121,14 @@ $(function() {          // Waits for document to fully load before executing any
     $('#scatterplot').html(data);
   });
 
-  socket.on("data->website", (data) =>{     // data comes in format: "måling#day#month#year#clock"
+  socket.on("data->website", (data) => {     // data comes in format: "måling#day#month#year#clock"
     console.log("received data from server");
     let cnt = handleData(data);  // returns list: ["måling","day","month","year","clock"]
     handleLevelSensorData(cnt);
   });
+
+
+
 
 
 // ====================================
@@ -148,6 +177,10 @@ Plotly.plot('line-chart',[{          // Creates original line-chart
 // ===  Navbar Links and Animations  ===
 $("#nav-logo").on("click", function() {
   myFuncs.hide_all_windows();
+  setTimeout(()=> {
+    $(".main-container").css("z-index","3");
+    $(".client-main-box").slideDown(200);
+  },300);
 });
 
 $("#nav-commands").on("click", function() {

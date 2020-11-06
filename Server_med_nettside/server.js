@@ -13,9 +13,61 @@ const http = require("http").createServer(app);
 const io = require('socket.io')(http);
 
 const port = 4000;
-var number_of_users = 0;
 var available_rooms = ["website", "esp"];
+var clients = [];       // Connected clients
 var current_time = new Date();
+
+
+// ==   Functions for keeping track of clients   ==
+function createClientName(name) {
+  let new_name;
+  if (findClientId(name) != 0) { // Name already taken (findClientId will return 0 if no Id were found)
+    new_name = createClientName(`${name}*`);    // Same name but with a * to identify its a copy (this will loop untill a name is found.)
+    return new_name
+  }
+  else if (name != null) { // Name specified and not taken
+    new_name = name;
+    return new_name
+  }
+  else {  // no name specified
+    new_name = createClientName("Unnamed Client");
+    return new_name;
+  }
+}
+
+function removeClientName(name, socketId) {
+  let len = clients.length;
+  for (let i=0; i<len; ++i) {
+    var client = clients[i];
+    if (client.clientId == socketId) {
+      clients.splice(i,1);
+      break;
+    }
+  }
+}
+
+function findClientId(client_name) {
+  let len = clients.length;
+  for (let i=0; i<len; ++i) {
+    var client = clients[i];
+    if (client.clientName == client_name) {
+      return client.clientId
+    }
+  }
+  return 0
+}
+
+function findClientName(clientId) {
+  let len = clients.length;
+  for (let i=0; i<len; ++i) {
+    var client = clients[i];
+    if (client.clientId == clientId) {
+      return client.clientName
+    }
+  }
+  return 0
+}
+
 
 // ==       Time        ==
 function getClock() {
@@ -44,29 +96,49 @@ app.get('/', (req, res) => {
   res.sendFile("index.html");
 });
 
-http.listen(port || 3000, () => {
+http.listen(port, () => {
   console.log('Listening on port: ' + port);
 });
 
 
 // == Websockets ==
-io.on("connection", (socket) => {
-  number_of_users += 1;
-  console.log('a user connected. # users: ' + number_of_users);
-  console.log(socket.nsp.flags);
+io.sockets.on("connection", (socket) => {
 
-  socket.on("join-room", (room) => {
-    console.log("[JOIN ROOM]");
-    console.log("[JOIN-ROOM] a client requested to join room. Room: ");
+  socket.on("join-room", (data) => {  // data in format: "room_name#client_name"
+    data = data.split("#");
+    let client_name = createClientName(data[1]);
+    let room = data[0];
+
+    // Join Room
     if (available_rooms.includes(room)) {
       socket.join(room);
       console.log("Joined room: " + room);
     }
+
+    // give client name
+    if (room !== "website") {
+      var clientInfo = new Object();
+      clientInfo.clientId = socket.id;
+      clientInfo.clientName = client_name;
+      clients.push(clientInfo);
+    }
+    console.log(`[JOIN-ROOM] client ${client_name} joined room: ${room}`);
+    console.log(`[LIST OF CLIENTS] ${clients}`);
+
+    // Ask website to update list of CLIENTS
+    socket.to('website').emit("res-client-list", JSON.stringify(clients)); // update client-tables on websites.
   });
 
   socket.on('disconnect', () => {
-    console.log('user disconnectted');
-    number_of_users -= 1;
+    let clientName = findClientName(socket.id)
+    removeClientName(clientName, socket.id);
+    socket.to('website').emit("res-client-list", JSON.stringify(clients)); // update client-tables on websites.
+    console.log(`[DISCONNECT] client ${clientName} disconnected`);
+  });
+
+  // Sends list of all clients to requester
+  socket.on("req-client-list", (_) => {
+    socket.emit("res-client-list", JSON.stringify(clients));
   });
 
   // Messages
