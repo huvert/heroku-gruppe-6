@@ -2,18 +2,25 @@
 
 CMD                         FROM          TO            ROOMS         Description
 ==========================================================================================
+-- Bootup --
 "join-room"                 clients       server        ALL           Request to join a room (rooms are used to filter trafic)
+"req-client-list"           website       server                      Request list of all clients
+"res-client-list"           server        website (*)                 ^Response to request
                                                                       room#clientID (optinal: Give the client an ID-name)
+
+-- Test --
 "chat-message"              clients       clients       ALL           Broadcast message to all clients
+
+-- Data --
 "req-data"                  server        esp-client    esp           Request data from esp
 "res-data"                  esp-client    server        esp           Response from esp (data)
 "data->website"             server        website       website       Sends data from server to Website
-"req-scatter-plot"          website       server                      Request to get scatterplotdata from server
-"res-scatter-plot"          server        website (*)                 Response. Sends scatter-plot data
 "data-levelsensor->server"  esp           server
-"new-client-connected"      server        website       website       Append new client to client list on main page
-"req-client-list"           website       server                      Request list of all clients
-"res-client-list"           server        website (*)                 ^Response to request
+
+'req-data-full'             website       server                      Require all data from selected client
+'res-data-full-scatter'                                               Responds with data for scatterplot
+'req-data-full-log'                                                   Responds with data for log
+
 
 
 *sends only to the client that requested the data.

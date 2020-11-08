@@ -15,8 +15,17 @@ const io = require('socket.io')(http);
 const port = 4000;
 var available_rooms = ["website", "esp"];
 var clients = [];       // Connected clients
-var current_time = new Date();
+var date = new Date();
 
+
+// ==   Functions for collecting data   ==
+function getScatterData(client_id) { //           <-- TODO: Get data from firebase
+  return 0
+}
+
+function getLogData(client_id) {     //           <-- TODO: Get data fom firebase
+  return 0
+}
 
 // ==   Functions for keeping track of clients   ==
 function createClientName(name) {
@@ -70,8 +79,19 @@ function findClientName(clientId) {
 
 
 // ==       Time        ==
+function updateTime() {
+  date = new Date();
+}
+
 function getClock() {
-  return `${current_time.getHours()}:${current_time.getMinutes()}:${current_time.getSeconds()}`
+  updateTime();
+  let hours = date.getHours();
+  let minutes = date.getMinutes();
+  let seconds = date.getSeconds();
+  hours = hours < 10 ? '0'+hours : hours;
+  minutes = minutes < 10 ? '0'+minutes : minutes;
+  seconds = seconds < 10 ? '0'+seconds : seconds;
+  return `${hours}:${minutes}:${seconds}`  // format: 07:02:01
 }
 
 function wrapDataWithClock(data) {
@@ -81,7 +101,11 @@ function wrapDataWithClock(data) {
 
 function wrapDataWithDate(data) {
   data = data.toString();
-  return `${data}#${current_time.getDate()}#${current_time.getMonth()}#${current_time.getYear()}`
+  let dato = date.getDate();
+  let month = date.getMonth()+1;
+  dato = dato < 10 ? '0'+dato : dato;
+  month = month < 10 ? '0'+month : month;
+  return `${data}#${dato}#${month}#${date.getYear()+1900}`
 }
 
 function wrapDataWithClockAndDate(data) {   // returns: data#day#month#year#05:20:40
@@ -93,7 +117,10 @@ function wrapDataWithClockAndDate(data) {   // returns: data#day#month#year#05:2
 app.use(express.static(__dirname + '/public/'));                   // Tells express where to look for files (such as stylesheets)
 app.use('/scripts', express.static(__dirname + '/node_modules/'));
 app.get('/', (req, res) => {
-  res.sendFile("index.html");
+  res.sendFile(__dirname+"/public/index.html");
+});
+app.get('*', (req, res) => {
+  res.sendFile(__dirname+"/public/404.html");
 });
 
 http.listen(port, () => {
@@ -104,6 +131,17 @@ http.listen(port, () => {
 // == Websockets ==
 io.sockets.on("connection", (socket) => {
 
+
+  socket.on('disconnect', () => {
+    let clientName = findClientName(socket.id)
+    removeClientName(clientName, socket.id);
+    socket.to('website').emit("res-client-list", JSON.stringify(clients)); // update client-tables on websites.
+    console.log(`[DISCONNECT] client ${clientName} disconnected`);
+  });
+
+
+
+  // -- Join room and give client name --
   socket.on("join-room", (data) => {  // data in format: "room_name#client_name"
     data = data.split("#");
     let client_name = createClientName(data[1]);
@@ -126,47 +164,47 @@ io.sockets.on("connection", (socket) => {
     console.log(`[LIST OF CLIENTS] ${clients}`);
 
     // Ask website to update list of CLIENTS
-    socket.to('website').emit("res-client-list", JSON.stringify(clients)); // update client-tables on websites.
+    socket.in('website').emit("res-client-list", JSON.stringify(clients)); // update client-tables on websites.
   });
 
-  socket.on('disconnect', () => {
-    let clientName = findClientName(socket.id)
-    removeClientName(clientName, socket.id);
-    socket.to('website').emit("res-client-list", JSON.stringify(clients)); // update client-tables on websites.
-    console.log(`[DISCONNECT] client ${clientName} disconnected`);
-  });
 
-  // Sends list of all clients to requester
+
+  // -- Sends list of all clients to requester --
   socket.on("req-client-list", (_) => {
     socket.emit("res-client-list", JSON.stringify(clients));
   });
 
-  // Messages
-  socket.on('chat-message', (msg) => {
-    console.log('message: ' + msg);
-    socket.broadcast.emit('chat-message', msg);
-  });
+
 
   // Got data from ESP
   socket.on('res-data', (data) => {             // Takes the data from esp and broadcasts
     console.log('data from esp: ' + data);
+    data = wrapDataWithClockAndDate(data);
+    console.log('wrapped data: ' + data);
     socket.in('website').emit('data->website', data);
   });
 
-  // Scatterplot data
-  socket.on('req-scatter-plot', () => {
-    console.log("res-scatter-plot");
-    // data = getScatterplotData(); elns :)             <-- TODO: Request scatterplotdata. This data should be in 2 lists ex: "[1,2,3]#[4,5,6]"
-    socket.emit('res-scatter-plot', "data");
+
+
+  // A clients asks for data from specific client
+  socket.on('req-client-data-full', (client_name) => {
+    console.log("req-client-data-full");
+    client_id = findClientId(client_name);
+    console.log(client_id);
+
+    // send log
+    let logdata = getLogData();
+    socket.emit('res-client-data-full-log', JSON.stringify(logdata));
+    // send scatter
+    let scatterdata = getScatterData();
+    socket.emit('res-client-data-full-scatter', JSON.stringify(scatterdata));
   });
 
-  // FOR TESTING OF ESP
-  socket.on('data->server', (data) => {
-    console.log(typeof(data));
-    console.log(data);
-  });
 });
 
+
+
+// TODO: Remove this is its not used
 // Request data from all ESP clients    (Not sure if this is going to be used)
 setInterval(() => {
   let t = wrapDataWithClockAndDate("1924");

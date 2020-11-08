@@ -12,6 +12,8 @@
 
 
 
+
+
 ---   Less important  ---
 
 - Group constants such as port and host etc to one document.
@@ -27,7 +29,7 @@
 - jquery is installed using npm. But also accessed throught CDN (botton of index.html)
   Uninstall jquery if its not used.
 
-
+- Pimp 404 page (atleast edit the text. Cause its wrong)
 
 
   Setup firebase ...  (??)

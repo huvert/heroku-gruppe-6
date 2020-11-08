@@ -19,7 +19,7 @@ socket.on("website", (data) => {
 socket.on('req-data', (data) => {
   // GET DATA FROM ESP HERE
   console.log("get-data --> data from esp")
-  socket.emit("res-data", "4#01#11#2020#19:44");
+  socket.emit("res-data", "4");
 });
 
 // My local ip address:   "http://192.168.1.12:4000"

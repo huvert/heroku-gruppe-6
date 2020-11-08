@@ -160,15 +160,18 @@ table {
   display: none;
 }
 
-.data-header {
+.data-top {
+  position: relative;
   width: 100%;
-  height: 15em;
-  background-color: red;
+  height: 20em;
+  background-color: #eeeeee;
 }
 
 /* --- Charts --- */
 #line-chart {
-
+  position: relative;
+  height: 100%;
+  width: 100%;
 }
 
 #scatterplot {
@@ -182,27 +185,6 @@ table {
 .black {
   background-color: black;
 }
-
-
-/* -- Window: Commands -- */
-#window-commands {
-  background-color: #32e0c4;
-  position: relative;
-  height: 415px;
-  width: 100%;
-  margin: 0;
-  text-align: center;
-  z-index: 2;
-  display: none;
-}
-.command-input {
-  width: 30%;
-  margin: auto;
-}
-.command-btn {
-  margin: 1rem;
-}
-
 
 
 /* ---   Client selector window   --- */
@@ -257,6 +239,7 @@ table {
 #client-log-table tr {
   height: 70px;
 }
+
 
 /* --- Background image --- */
 .bg-img {
