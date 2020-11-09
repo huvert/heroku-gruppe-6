@@ -1,6 +1,7 @@
 const HOST = "http://192.168.1.12:4000"
-const maxDataTableSize = 20; // How many readings the website should hold.
+const maxDataTableSize = 7; // How many readings the website should hold.
 var indexCounter = 0; // Used to keep track on which index to delete from table.
+var prev_data_reading;
 
 var clients = [];     // Stores clients
 
@@ -10,20 +11,7 @@ var dataTable = [
 ];         // Stores data log
 
 
-/* ==   Global Functions  == */
-loadTable(dataTable);
-function loadTable(dataTable) {     // Edit this function to request table from server (FIREBASE). This would be the ENITRE TABLE.
-  let dataHtml = '';
-  for(let data of dataTable) {
-    indexCounter = indexCounter+1;
-    dataHtml += (`<tr id="index${indexCounter}">
-                      <td>${data.date}</td>
-                      <td>${data.time}</td>
-                      <td>${data.reading}</td></tr>`);
-  }
-  $("#data-log-table").html(dataHtml);
-}
-
+// ===    Global Functions    ===
 /* data should come in format: "int#str#str#str ..." */
 function handleData(data) {
   cnt = data.split("#");
@@ -31,26 +19,42 @@ function handleData(data) {
   return cnt;
 }
 
-function handleLevelSensorData(data) {
+
+// ===    Functions for Log   ===
+function loadTable(dataTable) {     // Edit this function to request table from server (FIREBASE). This would be the ENITRE TABLE.
+  let dataHtml = '';
+  for(let data of dataTable) {
+    indexCounter = indexCounter+1;
+    dataHtml += formatLogData(data);
+  }
+  $("#data-log-table").html(dataHtml);
+}
+
+function formatLogData(data) {
+  let formated_data = (`<tr id="index${indexCounter}">
+                        <td>${data.date}</td>
+                        <td>${data.time}</td>
+                        <td>${data.reading}%</td></tr>`);
+  return formated_data
+}
+
+function updateLog(data) {
   // input format:      [int, "day", "month", "year", "clock"]
   // Convert to format: {date: "", time: "", reading: int}
   //    1. Formats data
   //    2. Updates logg
   //    3. Updates linechart
   let formatedData = {date: `${data[3]}/${data[2]}/${data[1]}`, time: `${data[4]}`, reading: data[0]};
-  let dataHtml = (`<tr><td>${formatedData.date}</td><td>${formatedData.time}</td><td>${formatedData.reading}</td></tr>`);
-  $("#data-log-table").append(dataHtml);
+  let dataHtml = formatLogData(formatedData);
+  $("#data-log-table").prepend(dataHtml);
   prev_data_reading = parseInt(data[0]);
   dataTable.push(formatedData);
-  replaceLastDataLineChart(prev_data_reading);     // Update linechart
   indexCounter = indexCounter+1;
-  if(maxDataTableSize < dataTable.length) {   // Remove first element of object and table.
-    $("#data-log-table tr:first-child").remove();
+  if(maxDataTableSize < dataTable.length+1) {   // Remove first element of object and table.
+    $("#data-log-table tr:last-child").remove();
     $(`#index${indexCounter-maxDataTableSize}`).remove();
   }
 }
-
-
 
 
 
@@ -74,22 +78,28 @@ $(function() {          // Waits for document to fully load before executing any
     return false;
   });
 
-  $("#nav-data").on("click", function() {
-    console.log("req-scater-plot");
-    socket.emit('req-scatter-plot');
-  });
-
-  socket.on('res-scatter-plot', (data) => {
-    console.log("res-scatter-plot");
-    $('#scatterplot').html(data);
-  });
-
+  // Nest the new data into existing data
   socket.on("data->website", (data) => {     // data comes in format: "måling#day#month#year#clock"
-    console.log("received data from server");
     let cnt = handleData(data);  // returns list: ["måling","day","month","year","clock"]
-    handleLevelSensorData(cnt);
+    updateLog(cnt);
+    updateBarChart();
+    updateLineChartData(prev_data_reading);     // Update linechart
   });
 
+  socket.on('res-data-log', (data) => {
+    data = JSON.parse(data);
+    loadTable(data);
+  });
+
+  socket.on('res-data-barchart', (data) => {
+    data = JSON.parse(data);
+    loadBarChart(data);
+  });
+
+  socket.on('res-data-linechart', (data) => {
+    data = JSON.parse(data);
+    loadLineChart(data);
+  });
 
   // --   Functions for KLIENTER table on front page   --
   // These functions needs to be inside the websocket to function properly.
@@ -114,9 +124,17 @@ $(function() {          // Waits for document to fully load before executing any
     });
   };
 
+  /*
+    Clicking on a client inside KLIENTER table, sends request to server
+    that all charts + log has to be updated according to clients ID (== socket.id on server)
+  */
   function handleTDClick() {
-    console.log($(this).html());
-    let client_name = $(this).html()
+    let client_name = $(this).html();
+    // Visuals
+    $("#client-log-table>tr>td.selected").removeClass("selected");
+    $(this).addClass("selected");
+    // Request data from server
     socket.emit("req-data-full", client_name);
+    console.log("req-data-full from: " + client_name);
   };
 });

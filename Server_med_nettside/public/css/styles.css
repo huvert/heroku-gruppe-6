@@ -160,11 +160,16 @@ table {
   display: none;
 }
 
-.data-top {
+.data-div {
   position: relative;
+  padding: 0 3%;
   width: 100%;
-  height: 20em;
+  height: 100%;
   background-color: #eeeeee;
+}
+
+#window-data .row {
+  height: 50%;
 }
 
 /* --- Charts --- */
@@ -172,10 +177,6 @@ table {
   position: relative;
   height: 100%;
   width: 100%;
-}
-
-#scatterplot {
-
 }
 
 .data-grid {
@@ -226,8 +227,12 @@ table {
   background: #212121;
 }
 
+.selected {     /* This class is added to selected element by jQuery */
+  background-color: #353535;
+  color: white;
+}
 
-#client-log-table {}   /* Used by jquery */
+#client-log-table {}       /* Used by jquery */
 
 #client-log-table tr:nth-child(even) {
   background-color: #129ca1;
@@ -269,7 +274,7 @@ table {
 
 
 /*
-Colors:
+Color scheme:
 #eeeeee
 #32e0c4
 #0d7377

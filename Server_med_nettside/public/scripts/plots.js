@@ -2,23 +2,28 @@
 var current_time = new Date();
 var last_level_value;
 
+
+// ====       Time and Sync Functions        ====
 // Returns time untill next quarter (15min) in seconds.
 /* Ordinær ligning: 60(15-(Minutes%15)) - Sekunder
-   This function is used to sync the graph with your computers time */
+   This function is used to sync the graph with your computers time
+   */
 function getInitTime() {
   current_time = new Date();
   return 60*(15-(current_time.getMinutes()%15)) - current_time.getSeconds()
 }
 
-// Used to label graph
-function getHours() {
-  let t = current_time.getHours();
-  if (t < 10) {
-    return `0${t}:00`
-  }
-  return `${t}:00`
+// Used to sync Bar Chart
+function minutesUntilMidnight() {
+    var midnight = new Date();
+    midnight.setHours( 24 );
+    midnight.setMinutes( 0 );
+    midnight.setSeconds( 0 );
+    midnight.setMilliseconds( 0 );
+    return ( midnight.getTime() - new Date().getTime() ) / 1000 / 60;
 }
 
+// ====       Functions for all charts      ====
 // The 2 following functions can be used on any chart
 function addData(chart, label, data) {
     chart.data.labels.push(label);
@@ -29,6 +34,42 @@ function addData(chart, label, data) {
 function removeData(chart) {
     chart.data.labels.shift();
     chart.data.datasets[0].data.shift();
+}
+
+// ====       Linechart functions       ====
+// Used to label linechart
+function getHours() {
+  let t = current_time.getHours();
+  if (t < 10) {
+    return `0${t}:00`
+  }
+  return `${t}:00`
+}
+
+function updateLineChart() {
+  let new_label = '';
+  let new_data = dataTable[dataTable.length-1].reading;  // Last received value from client
+  current_time = new Date();
+  if (current_time.getMinutes() == 0) {   // Update label hver time.
+    new_label = getHours();
+  }
+  removeData(linechart);
+  addData(linechart, new_label, new_data);
+}
+
+// When receiving new data from client the linechart should update y-axis
+// without updating x-axis.
+function updateLineChartData(data) {
+  linechart.data.datasets[0].data.pop();
+  linechart.data.datasets[0].data.push(data);
+  linechart.update();
+}
+
+// TODO: create functions that takes data from FIREBASE and updates entire Chart
+// Lenght of x-axis should be 24 * 4 = 96
+function loadLineChart(data) {
+  linechart.data.datasets[0].data = data.y_axis;
+  linechart.data.labels = data.x_axis;
 }
 
 
@@ -42,7 +83,6 @@ function removeData(chart) {
 
 var ctx = document.getElementById('line-chart').getContext('2d');
 var linechart = new Chart(ctx, {
-    // The type of chart we want to create
     type: 'line',
 
     // The data for our dataset
@@ -64,7 +104,6 @@ var linechart = new Chart(ctx, {
         }]
     },
 
-    // Configuration options go here
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -81,37 +120,76 @@ setTimeout(() => {
   }, 15*60*1000);               // Hvert kvarter: 15*60*1000
 }, getInitTime()*1000);
 
-function updateLineChart() {
-  let new_label = '';
-  let new_data = dataTable[dataTable.length-1].reading;  // Last received value from client
-  current_time = new Date();
-  if (current_time.getMinutes() == 0) {   // Update label hver time.
-    new_label = getHours();
-  }
-  removeData(linechart);
-  addData(linechart, new_label, new_data);
+
+
+
+
+
+
+// ========================================
+// ===           barChart               ===
+/*
+  X-axis is updated every day 00:00
+  Y-axis is updated every time data is received
+*/
+var ctx_bar = document.getElementById('bar-chart').getContext('2d');
+var barchart = new Chart(ctx_bar, {
+    type: 'bar',
+    data: {
+        labels: ['M','Ti','O','T','F','L','S','Today'],
+        datasets: [{
+            label: '# trykk per dag [%]',
+            backgroundColor: ["#003f5c", "#2f4b7c","#665191","#a05195","#d45087","#f95d6a","#ff7c43","#ffa600"],
+            data: [1,2,3,4,5,6,7,4]
+        }]
+    },
+
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          }
+        }]
+      }
+    }
+});
+
+// Barchart update at midnight, with interval every 24hours.
+setTimeout(() => {
+  barChartNewDay();
+  setInterval(() => {
+    barChartNewDay();
+  }, 24*60*60*1000);
+}, minutesUntilMidnight()*60*1000);
+
+// Update barchart when passing midnight (00:00)
+function barChartNewDay() {
+  // Update colors
+  let new_color = barchart.data.datasets[0].backgroundColor[0];
+  barchart.data.datasets[0].backgroundColor.shift();
+  barchart.data.datasets[0].backgroundColor.push(new_color);
+  // Update label "Today" -> ex: "M".
+  barchart.data.labels[barchart.data.labels.length - 1] = barchart.data.labels[0];
+  // Update data
+  addData(barchart, "Today", 0);
+  removeData(barchart);
+  barchart.update();
 }
 
-// When receiving new data from client the linechart should update y-axis
-// without updating x-axis.
-function replaceLastDataLineChart(data) {
-  linechart.data.datasets[0].data.pop();
-  linechart.data.datasets[0].data.push(data);
-  linechart.update();
+// add +1 to Todays value
+function updateBarChart() {
+  let index = barchart.data.datasets[0].data.length - 1;
+  let y = barchart.data.datasets[0].data[index];
+  barchart.data.datasets[0].data[index] = y+1;
+  barchart.update();
 }
 
-// TODO: create functions that takes data from FIREBASE and updates entire Chart
-// Lenght of x-axis should be 24 * 4 = 96
-function fullyUpdateLineChart(data) {
-
-  let new_data;
-  let labels;
-
-
-  // data from ??? --> data[96] & labels[96]
-
-
-  // replace data and labels in linechart.
-  linechart.data.datasets[0].data = new_data;
-  linechart.data.labels = labels;
+// data should arrive in format:
+// data = {x_axis: ['M',...'Today'], y_axis: [1,2,3...8]}
+function loadBarChart(data) {
+  barchart.data.datasets[0].data = data.y_axis;
+  barchart.data.labels = data.x_axis;
 }
