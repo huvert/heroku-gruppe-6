@@ -1,27 +1,28 @@
+"use strict";
 
 var current_time = new Date();
-var last_level_value;
-
 
 // ====       Time and Sync Functions        ====
 // Returns time untill next quarter (15min) in seconds.
 /* Ordinær ligning: 60(15-(Minutes%15)) - Sekunder
    This function is used to sync the graph with your computers time
    */
-function getInitTime() {
-  current_time = new Date();
-  return 60*(15-(current_time.getMinutes()%15)) - current_time.getSeconds()
-}
+var timeFuncs = {
+  getInitTime: function() {
+    current_time = new Date();
+    return 60*(15-(current_time.getMinutes()%15)) - current_time.getSeconds()
+  },
+  // Used to sync Bar Chart
+  minutesUntilMidnight: function() {
+      var midnight = new Date();
+      midnight.setHours( 24 );
+      midnight.setMinutes( 0 );
+      midnight.setSeconds( 0 );
+      midnight.setMilliseconds( 0 );
+      return ( midnight.getTime() - new Date().getTime() ) / 1000 / 60;
+  },
+};
 
-// Used to sync Bar Chart
-function minutesUntilMidnight() {
-    var midnight = new Date();
-    midnight.setHours( 24 );
-    midnight.setMinutes( 0 );
-    midnight.setSeconds( 0 );
-    midnight.setMilliseconds( 0 );
-    return ( midnight.getTime() - new Date().getTime() ) / 1000 / 60;
-}
 
 // ====       Functions for all charts      ====
 // The 2 following functions can be used on any chart
@@ -35,6 +36,48 @@ function removeData(chart) {
     chart.data.labels.shift();
     chart.data.datasets[0].data.shift();
 }
+
+
+
+
+
+// ========================================
+// ===           LineGraph              ===
+/*
+  X-axis is updated every 15minutes
+  Y-axis is updated every 15minutes BUT will edit last index in data list
+  when receiving new data pack from server.
+*/
+
+var ctx = $('#line-chart')[0].getContext('2d');
+var linechart = new Chart(ctx, {
+    type: 'line',
+
+    // The data for our dataset
+    data: {
+        labels: ['00:00','','','','01:00','','','','02:00','','','','03:00','','','','04:00',
+                  '','','','05:00','','','','06:00','','','','07:00','','','','08:00','','','',
+                  '09:00','','','','10:00','','','','11:00','','','','12:00','','','','13:00',
+                  '','','','14:00','','','','15:00','','','','16:00','','','','17:00','','','',
+                  '18:00','','','','19:00','','','','20:00','','','','21:00','','','','22:00',
+                  '','','','23:00','','',''],
+        datasets: [{
+            label: 'Soap Dispenser Level [%]',
+            backgroundColor: '#0d7377',
+            borderColor: '#212121',
+            data: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,
+                  0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,
+                  0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,
+                  0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,]   // len: 24
+        }]
+    },
+
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+
+    }
+});
 
 // ====       Linechart functions       ====
 // Used to label linechart
@@ -72,53 +115,13 @@ function loadLineChart(data) {
   linechart.data.labels = data.x_axis;
 }
 
-
-// ========================================
-// ===           LineGraph              ===
-/*
-  X-axis is updated every 15minutes
-  Y-axis is updated every 15minutes BUT will edit last index in data list
-  when receiving new data pack from server.
-*/
-
-var ctx = document.getElementById('line-chart').getContext('2d');
-var linechart = new Chart(ctx, {
-    type: 'line',
-
-    // The data for our dataset
-    data: {
-        labels: ['00:00','','','','01:00','','','','02:00','','','','03:00','','','','04:00',
-                  '','','','05:00','','','','06:00','','','','07:00','','','','08:00','','','',
-                  '09:00','','','','10:00','','','','11:00','','','','12:00','','','','13:00',
-                  '','','','14:00','','','','15:00','','','','16:00','','','','17:00','','','',
-                  '18:00','','','','19:00','','','','20:00','','','','21:00','','','','22:00',
-                  '','','','23:00','','',''],
-        datasets: [{
-            label: 'Soap Dispenser Level [%]',
-            backgroundColor: '#0d7377',
-            borderColor: '#212121',
-            data: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,
-                  0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,
-                  0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,
-                  0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,]   // len: 24
-        }]
-    },
-
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-
-    }
-});
-
-
 // Update labels and data-axis (hvert kvarter)
 setTimeout(() => {
   updateLineChart();
   setInterval(() => {
     updateLineChart();
   }, 15*60*1000);               // Hvert kvarter: 15*60*1000
-}, getInitTime()*1000);
+}, timeFuncs.getInitTime()*1000);
 
 
 
@@ -132,7 +135,7 @@ setTimeout(() => {
   X-axis is updated every day 00:00
   Y-axis is updated every time data is received
 */
-var ctx_bar = document.getElementById('bar-chart').getContext('2d');
+var ctx_bar = $('#bar-chart')[0].getContext('2d');
 var barchart = new Chart(ctx_bar, {
     type: 'bar',
     data: {
@@ -154,16 +157,10 @@ var barchart = new Chart(ctx_bar, {
           }
         }]
       }
-    }
+    },
+
 });
 
-// Barchart update at midnight, with interval every 24hours.
-setTimeout(() => {
-  barChartNewDay();
-  setInterval(() => {
-    barChartNewDay();
-  }, 24*60*60*1000);
-}, minutesUntilMidnight()*60*1000);
 
 // Update barchart when passing midnight (00:00)
 function barChartNewDay() {
@@ -193,3 +190,11 @@ function loadBarChart(data) {
   barchart.data.datasets[0].data = data.y_axis;
   barchart.data.labels = data.x_axis;
 }
+
+// Barchart update at midnight, with interval every 24hours.
+setTimeout(() => {
+  barChartNewDay();
+  setInterval(() => {
+    barChartNewDay();
+  }, 24*60*60*1000);
+}, timeFuncs.minutesUntilMidnight()*60*1000);

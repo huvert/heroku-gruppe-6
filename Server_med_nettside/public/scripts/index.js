@@ -1,4 +1,6 @@
-const HOST = "http://192.168.1.12:4000"
+"use strict";
+
+const HOST = "http://192.168.1.12:4000";
 const maxDataTableSize = 7; // How many readings the website should hold.
 var indexCounter = 0; // Used to keep track on which index to delete from table.
 var prev_data_reading;
@@ -14,47 +16,48 @@ var dataTable = [
 // ===    Global Functions    ===
 /* data should come in format: "int#str#str#str ..." */
 function handleData(data) {
-  cnt = data.split("#");
+  let cnt = data.split("#");
   cnt[0] = parseInt(cnt[0]);
   return cnt;
 }
 
 
-// ===    Functions for Log   ===
-function loadTable(dataTable) {     // Edit this function to request table from server (FIREBASE). This would be the ENITRE TABLE.
-  let dataHtml = '';
-  for(let data of dataTable) {
+// ===    Functions for Log (logg on navbar)   ===
+var log = {
+  loadTable: function(dataTable) {     // Edit this function to request table from server (FIREBASE). This would be the ENITRE TABLE.
+    let dataHtml = '';
+    for(let data of dataTable) {
+      indexCounter = indexCounter+1;
+      dataHtml += log.formatData(data);
+    }
+    $("#data-log-table").html(dataHtml);
+  },
+  formatData: function(data) {
+    let formated_data = (`<tr id="index${indexCounter}">
+                          <td>${data.date}</td>
+                          <td>${data.time}</td>
+                          <td>${data.reading}%</td></tr>`);
+    return formated_data
+  },
+  update: function(data) {
+    // input format:      [int, "day", "month", "year", "clock"]
+    // Convert to format: {date: "", time: "", reading: int}
+    //    1. Formats data
+    //    2. Updates logg
+    //    3. Updates linechart
+    let formatedData = {date: `${data[3]}/${data[2]}/${data[1]}`, time: `${data[4]}`, reading: data[0]};
+    let dataHtml = log.formatData(formatedData);
+    $("#data-log-table").prepend(dataHtml);
+    prev_data_reading = parseInt(data[0]);
+    dataTable.push(formatedData);
     indexCounter = indexCounter+1;
-    dataHtml += formatLogData(data);
+    if(maxDataTableSize < dataTable.length+1) {   // Remove first element of object and table.
+      $("#data-log-table tr:last-child").remove();
+      $(`#index${indexCounter-maxDataTableSize}`).remove();
+    }
   }
-  $("#data-log-table").html(dataHtml);
-}
+};
 
-function formatLogData(data) {
-  let formated_data = (`<tr id="index${indexCounter}">
-                        <td>${data.date}</td>
-                        <td>${data.time}</td>
-                        <td>${data.reading}%</td></tr>`);
-  return formated_data
-}
-
-function updateLog(data) {
-  // input format:      [int, "day", "month", "year", "clock"]
-  // Convert to format: {date: "", time: "", reading: int}
-  //    1. Formats data
-  //    2. Updates logg
-  //    3. Updates linechart
-  let formatedData = {date: `${data[3]}/${data[2]}/${data[1]}`, time: `${data[4]}`, reading: data[0]};
-  let dataHtml = formatLogData(formatedData);
-  $("#data-log-table").prepend(dataHtml);
-  prev_data_reading = parseInt(data[0]);
-  dataTable.push(formatedData);
-  indexCounter = indexCounter+1;
-  if(maxDataTableSize < dataTable.length+1) {   // Remove first element of object and table.
-    $("#data-log-table tr:last-child").remove();
-    $(`#index${indexCounter-maxDataTableSize}`).remove();
-  }
-}
 
 
 
@@ -81,14 +84,14 @@ $(function() {          // Waits for document to fully load before executing any
   // Nest the new data into existing data
   socket.on("data->website", (data) => {     // data comes in format: "måling#day#month#year#clock"
     let cnt = handleData(data);  // returns list: ["måling","day","month","year","clock"]
-    updateLog(cnt);
+    log.update(cnt);
     updateBarChart();
     updateLineChartData(prev_data_reading);     // Update linechart
   });
 
   socket.on('res-data-log', (data) => {
     data = JSON.parse(data);
-    loadTable(data);
+    log.loadTable(data);
   });
 
   socket.on('res-data-barchart', (data) => {

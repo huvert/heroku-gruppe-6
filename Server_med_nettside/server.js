@@ -1,3 +1,4 @@
+"use strict";
 /*
 We first import http. socket.io (which will be our websocket,) is built upon http.
 The server will do as follows:
@@ -65,7 +66,7 @@ function removeClientName(name, socketId) {
     var client = clients.esp[i];
     if (client.clientId == socketId) {
       console.log(client);
-      console.log(clients.esp[i]);
+      console.log(clients.esp);
       clients.esp.splice(i,1);
       break;
     }
@@ -131,6 +132,7 @@ function wrapDataWithClockAndDate(data) {   // returns: data#day#month#year#05:2
 }
 
 
+
 // == Setting up server ==
 app.use(express.static(__dirname + '/public/'));                   // Tells express where to look for files (such as stylesheets)
 app.use('/scripts', express.static(__dirname + '/node_modules/'));
@@ -147,9 +149,11 @@ http.listen(port, () => {
 
 
 
+
 // ==========================================
 // =======         Websockets        ========
 io.sockets.on("connection", (socket) => {
+
 
   socket.on('disconnect', () => {
     let clientName = getClientName(socket.id);
@@ -197,21 +201,11 @@ io.sockets.on("connection", (socket) => {
   });
 
 
-  // -------------------------------------------------
-  // TODO: REMOVE THIS IF NOT USED
-  // Got data from ESP
-  socket.on('res-data', (data) => {             // Takes the data from esp and broadcasts
-    console.log('data from esp: ' + data);
-    data = wrapDataWithClockAndDate(data);
-    socket.in('website').emit('data->website', data);
-  });
-  // -------------------------------------------------
-
 
   // A client asks for data from specific client
   socket.on('req-data-full', (client_name) => {
     console.log("req-data-full");
-    client_id = getClientId(client_name);
+    let client_id = getClientId(client_name);
 
     // send log data
     // TODO: FIREBASE
@@ -254,6 +248,21 @@ io.sockets.on("connection", (socket) => {
                               0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,]}   // len: 24*4}
     socket.emit('res-data-linechart', JSON.stringify(linechartData));
   });
+
+
+
+
+
+
+  // -------------------------------------------------
+  // TODO: REMOVE THIS IF NOT USED
+  // Got data from ESP
+  socket.on('res-data', (data) => {             // Takes the data from esp and broadcasts
+    console.log('data from esp: ' + data);
+    data = wrapDataWithClockAndDate(data);
+    socket.in('website').emit('data->website', data);
+  });
+  // -------------------------------------------------
 
 });
 

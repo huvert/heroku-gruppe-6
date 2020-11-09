@@ -1,8 +1,10 @@
 const io = require("socket.io-client");
 
+const name = "Bjørnulf";
+
 let socket = io.connect("http://192.168.1.16:4000");     // Creates websocket connection to server
 
-socket.emit("join-room", "esp#ESP-client");  // Request to join room: website
+socket.emit("join-room", "esp#"+name);  // Request to join room: website
 
 socket.on('chat-message', (msg) => {
   console.log("Received: " + msg);

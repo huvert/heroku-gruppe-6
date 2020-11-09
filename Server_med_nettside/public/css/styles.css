@@ -42,10 +42,6 @@ table {
 }
 
 /* ---- Navbar ----*/
-.logo-image {
-
-}
-
 .logo-text {
   font-size: 1.5rem;
   font-weight: bold;
@@ -66,17 +62,11 @@ table {
   width: 100%;
   margin: 0;
   overflow: auto;
-  background-image: url("background-img.jpg");
+  background-image: url("../images/background-img.jpg");
   background-size: cover;
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-position: center center;
-}
-
-.window-background {
-  position: absolute;
-  height: 415px;
-  text-align: center;
 }
 
 .layer-2 {
@@ -150,7 +140,6 @@ table {
 
 /* -- Window: Data Visualization -- */
 #window-data {
-  overflow: hidden;
   background-color: #32e0c4;
   position: relative;
   height: 100%;
@@ -171,22 +160,6 @@ table {
 #window-data .row {
   height: 50%;
 }
-
-/* --- Charts --- */
-#line-chart {
-  position: relative;
-  height: 100%;
-  width: 100%;
-}
-
-.data-grid {
-  height: 40em;
-}
-
-.black {
-  background-color: black;
-}
-
 
 /* ---   Client selector window   --- */
 .main-container {
@@ -252,8 +225,6 @@ table {
   max-width: 100%;
 }
 
-
-
 /* --- Footer --- */
 .footer {
   position: absolute;
@@ -270,8 +241,6 @@ table {
 .footer-text {
   color: #FFFFFF;
 }
-
-
 
 /*
 Color scheme:
