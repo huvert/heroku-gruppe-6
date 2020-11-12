@@ -294,13 +294,13 @@ var firebaseConfig = {
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-
+var db = firebase.database();
 
 function writeEspData(espID, espData) {
   var data = espData;
   var parse =data.split('#');
 
-  firebase.database().ref('ESP32-Data/').push({
+  db.ref('ESP32-Data/').push({
     date: parse[3]+'-'+parse[2]+'-'+parse[1],
     time: parse[4],
     esp: espID,
