@@ -1,13 +1,9 @@
 "use strict";
 
-// ====================================
 // ===          Animations          ===
 
 var animations = {
   hide_all_windows: function(filter = null) {
-    if (filter !== "commands") {
-      $("#window-commands").slideUp(200);
-    }
     if (filter !== "data") {
       $("#window-data").slideUp(200);
     }
@@ -26,18 +22,13 @@ var animations = {
 
 
 // ===  Navbar Links and Animations  ===
-$(document).ready(function(event) {          // Waits for document to fully load before executing any JS code
+$(function() {          // Waits for document to fully load before executing any JS code
   $("#nav-logo").on("click", function() {
     animations.hide_all_windows();
     setTimeout(()=> {
       $(".main-container").css("z-index","3");
       $(".client-main-box").slideDown(200);
     },300);
-  });
-
-  $("#nav-commands").on("click", function() {
-    animations.hide_all_windows("commands");
-    $("#window-commands").slideDown(200);
   });
 
   $("#nav-log").on("click", function() {
@@ -58,6 +49,7 @@ $(document).ready(function(event) {          // Waits for document to fully load
   });
 
   // ===  Other buttons and animations  ===
+  // Rick rolled
   $(".admin-btn").on("click", function() {
     console.log("HELLO");
     $("#admin-container").hide();

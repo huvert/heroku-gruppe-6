@@ -12,10 +12,10 @@
   "dependencies": {
     "chart.js": "^2.9.4",
     "express": "^4.17.1",
+    "firebase": "^8.0.1",
     "http": "0.0.1-security",
     "jquery": "^3.5.1",
     "nodemon": "^2.0.6",
-    "plotly.js-dist": "^1.57.0",
     "socket.io": "^2.3.0"
   }
 }

@@ -1,4 +1,5 @@
 "use strict";
+
 /*
 We first import http. socket.io (which will be our websocket,) is built upon http.
 The server will do as follows:
@@ -8,6 +9,7 @@ The server will do as follows:
 
 BTW the code may be overkill commented. Will fix this as a last finish.
 */
+var firebase = require('firebase');
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
@@ -65,8 +67,6 @@ function removeClientName(name, socketId) {
   for (let i=0; i<len; ++i) {
     var client = clients.esp[i];
     if (client.clientId == socketId) {
-      console.log(client);
-      console.log(clients.esp);
       clients.esp.splice(i,1);
       break;
     }
@@ -255,11 +255,13 @@ io.sockets.on("connection", (socket) => {
 
 
   // -------------------------------------------------
-  // TODO: REMOVE THIS IF NOT USED
   // Got data from ESP
   socket.on('res-data', (data) => {             // Takes the data from esp and broadcasts
-    console.log('data from esp: ' + data);
+    let client_name = getClientName(socket.id);
     data = wrapDataWithClockAndDate(data);
+    writeEspData("1", "HEI");
+    console.log(client_name);
+    console.log(data);
     socket.in('website').emit('data->website', data);
   });
   // -------------------------------------------------
@@ -273,3 +275,42 @@ io.sockets.on("connection", (socket) => {
 setInterval(() => {
   io.in('esp').emit('req-data', null);
 }, 10000);
+
+
+
+
+
+// ============   FIREBASE  =============
+
+// Your web app's Firebase configuration
+var firebaseConfig = {
+   apiKey: "AIzaSyDPv6NqXMvrr-mRGHIvKU9XbgzimMu_PLg",
+   authDomain: "raspbarry-pi---gruppe-6.firebaseapp.com",
+   databaseURL: "https://raspbarry-pi---gruppe-6.firebaseio.com",
+   projectId: "raspbarry-pi---gruppe-6",
+   storageBucket: "raspbarry-pi---gruppe-6.appspot.com",
+   messagingSenderId: "988917312975",
+   appId: "1:988917312975:web:858f19591cd6732d2bb6ba"
+};
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+
+function writeEspData(readId, readData) {
+    firebase.database().ref('ESP32-Data/' + readId).set({
+        readData: readData,
+
+    //Todo: Get and write timestamp
+    });
+}
+
+/*Todo:
+ Read function
+ Read and increment function
+ function to read from ESP
+ */
+
+
+
+//  <!-- TODO: Add SDKs for Firebase products that you want to use
+//    https://firebase.google.com/docs/web/setup#available-libraries -->

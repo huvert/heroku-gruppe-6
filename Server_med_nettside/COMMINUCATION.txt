@@ -9,7 +9,6 @@ CMD                         FROM          TO            ROOMS         Descriptio
                                                                       room#clientID (optinal: Give the client an ID-name)
 
 -- Test --
-"chat-message"              clients       clients       ALL           Broadcast message to all clients
 "req-data"                  server        esp-client    esp           Request data from esp   (TO BE DELETED)
 
 -- new data packet (LIVE) --

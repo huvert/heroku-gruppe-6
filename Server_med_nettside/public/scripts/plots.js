@@ -81,7 +81,7 @@ var linechart = new Chart(ctx, {
 
 // ====       Linechart functions       ====
 // Used to label linechart
-function getHours() {
+function getTimestamp() {
   let t = current_time.getHours();
   if (t < 10) {
     return `0${t}:00`
@@ -94,7 +94,7 @@ function updateLineChart() {
   let new_data = dataTable[dataTable.length-1].reading;  // Last received value from client
   current_time = new Date();
   if (current_time.getMinutes() == 0) {   // Update label hver time.
-    new_label = getHours();
+    new_label = getTimestamp();
   }
   removeData(linechart);
   addData(linechart, new_label, new_data);

@@ -2,10 +2,9 @@
 
 const HOST = "http://192.168.1.12:4000";
 const maxDataTableSize = 7; // How many readings the website should hold.
-var indexCounter = 0; // Used to keep track on which index to delete from table.
 var prev_data_reading;
 
-var clients = [];     // Stores clients
+var clients = [];     // Stores clients by names (not ID)
 
 var dataTable = [
   { date: 'test1', time: 'test2', reading: 'test3' },   // DELETE
@@ -18,22 +17,24 @@ var dataTable = [
 function handleData(data) {
   let cnt = data.split("#");
   cnt[0] = parseInt(cnt[0]);
+  prev_data_reading = cnt[0];
   return cnt;
 }
 
 
 // ===    Functions for Log (logg on navbar)   ===
 var log = {
+  indexCounter: 0,                 // Keeps track on # of indexes
   loadTable: function(dataTable) {     // Edit this function to request table from server (FIREBASE). This would be the ENITRE TABLE.
     let dataHtml = '';
     for(let data of dataTable) {
-      indexCounter = indexCounter+1;
+      log.indexCounter = log.indexCounter+1;
       dataHtml += log.formatData(data);
     }
     $("#data-log-table").html(dataHtml);
   },
   formatData: function(data) {
-    let formated_data = (`<tr id="index${indexCounter}">
+    let formated_data = (`<tr id="index${log.indexCounter}">
                           <td>${data.date}</td>
                           <td>${data.time}</td>
                           <td>${data.reading}%</td></tr>`);
@@ -48,12 +49,11 @@ var log = {
     let formatedData = {date: `${data[3]}/${data[2]}/${data[1]}`, time: `${data[4]}`, reading: data[0]};
     let dataHtml = log.formatData(formatedData);
     $("#data-log-table").prepend(dataHtml);
-    prev_data_reading = parseInt(data[0]);
     dataTable.push(formatedData);
-    indexCounter = indexCounter+1;
+    log.indexCounter = log.indexCounter+1;
     if(maxDataTableSize < dataTable.length+1) {   // Remove first element of object and table.
       $("#data-log-table tr:last-child").remove();
-      $(`#index${indexCounter-maxDataTableSize}`).remove();
+      $(`#index${log.indexCounter-maxDataTableSize}`).remove();
     }
   }
 };
@@ -64,13 +64,13 @@ var log = {
 
 // ====================================
 // ===          Socket IO           ===
-$(function() {          // Waits for document to fully load before executing any JS code
+$(function() {          // Waits for document to fully load before executing this block
   var socket = io.connect();
   socket.emit("join-room", "website");  // Request to join room: website
   socket.emit("req-client-list", "");   // require full list of "esp" clients connected to server
   socket.on("res-client-list", (clients_list) => {
     clients = JSON.parse(clients_list);
-    console.log(clients);
+    console.log("[res-client-list] Updating client list");
     updateClientLogTable();
   });
 
@@ -105,7 +105,6 @@ $(function() {          // Waits for document to fully load before executing any
   });
 
   // --   Functions for KLIENTER table on front page   --
-  // These functions needs to be inside the websocket to function properly.
 
   // Full update of client-log-table on front page
   function updateClientLogTable() {
