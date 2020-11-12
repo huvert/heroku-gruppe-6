@@ -5,3 +5,9 @@ function writeEspData(readId, readData) {
     //Todo: Get and write timestamp
     });
 }
+
+/*Todo:
+ Read function
+ Read and increment function
+ function to read from ESP
+ */
