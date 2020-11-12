@@ -296,13 +296,42 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 
-function writeEspData(readId, readData) {
-    firebase.database().ref('ESP32-Data/' + readId).set({
-        readData: readData,
+function writeEspData(espID, espData) {
+  var data = espData;
+  var parse =data.split('#');
 
-    //Todo: Get and write timestamp
-    });
+  firebase.database().ref('ESP32-Data/').push({
+    date: parse[3]+'-'+parse[2]+'-'+parse[1],
+    time: parse[4],
+    esp: espID,
+    nivå: Number(parse[0]),
+
+  });
 }
+//example: writeEspData("ESP 1", "50#12#11#2020#15:47")
+
+function queryItemByDateRange(startDate, endDate) {
+
+  var ref = db.ref('ESP32-Data');
+  ref.orderByChild("date").startAt(startDate).endAt(endDate).on("child_added", function(snapshot) {
+    console.log('dato ' + snapshot.val().date + '. Gjenstående nivå ' + snapshot.val().nivå);
+  });
+}
+//gets items in date range
+//example: queryItemByDateRange("2019-11-12","2020-11-11")
+
+function queryDB(){
+  var ref = firebase.database().ref('ESP32-Data');
+  ref.orderByChild("date").on("child_added", function(snapshot) {
+    console.log('dato ' + snapshot.val().date + '. Gjenstående nivå ' + snapshot.val().nivå);
+  });
+}
+//Gets all objects in database
+//example: queryDB
+
+//Disse trenger return statement, men formatet er opp til deg
+
+
 
 /*Todo:
  Read function
