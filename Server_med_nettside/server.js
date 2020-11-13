@@ -20,7 +20,6 @@ const io = require('socket.io')(http);
 const port = 4000;
 var available_rooms = ["website", "esp"];
 var date = new Date();
-var log_container = [];   // Used as a data container (prosess data in firebase)
 var barchart_container = [];
 var linechart_container = [];
 var c = 0;
@@ -217,7 +216,12 @@ io.sockets.on("connection", (socket) => {
     socket.emit("res-client-list", JSON.stringify(clients.esp));
   });
 
-
+  // Tell specific ESP-client to start/stop Servo
+  socket.on("maintenance", (state) => {
+    state = state.split("#");  // [name, state]
+    let id = getClientId(state[0]);
+    io.to(id).emit("maintenance", state[1]);
+  });
 
   // A client asks for data from specific client
   socket.on('req-data-full', (client_name) => {
@@ -233,7 +237,6 @@ io.sockets.on("connection", (socket) => {
         console.log(error);
       });
 
-
     getBarchartDataFromFirebase(client_name)
       .then(y_axis => {
         let x_axis = getListOfWeekdays();
@@ -244,7 +247,6 @@ io.sockets.on("connection", (socket) => {
         console.log('[ERROR] error when getting barchart data from firebase');
         console.log(error);
       })
-
 
     getLinechartDataFromFirebase(client_name)
       .then((linechartData) => {
@@ -259,19 +261,8 @@ io.sockets.on("connection", (socket) => {
         console.log(error);
       })
 
-    // send linechart data
-    // TODO: implement getLineChartData();
-    //        Same as with getBarData - x_axis should be sorted based on current time.
-
-    // socket.emit('res-data-linechart', JSON.stringify(linechartData));
   });
 
-
-
-
-
-
-  // -------------------------------------------------
   // Got data from ESP
   socket.on('res-data', (data) => {             // Takes the data from esp and broadcasts
     let client_name = getClientName(socket.id);
@@ -280,19 +271,7 @@ io.sockets.on("connection", (socket) => {
     writeEspData(client_name, data);
     socket.in('website').emit('data->website', data);
   });
-  // -------------------------------------------------
-
 });
-
-
-
-// TODO: Remove this is its not used
-// Request data from all ESP clients    (Not sure if this is going to be used)
-setInterval(() => {
-  io.in('esp').emit('req-data', null);
-}, 1000000);
-
-
 
 
 
@@ -325,13 +304,8 @@ function writeEspData(client_name, espData) {
 }
 //example: writeEspData("ESP 1", "50#12#11#2020#15:47")
 
-
 //gets items in date range
 //example: queryItemByDateRange("2019-11-12","2020-11-11")
-
-
-
-
 
 function queryDB(){
   var ref = firebase.database().ref('ESP32-Data');
@@ -339,39 +313,10 @@ function queryDB(){
     console.log('dato ' + snapshot.val().date + '. Gjenstående nivå ' + snapshot.val().nivå);
   });
 }
-//Gets all objects in database
-//example: queryDB
-
-//Disse trenger return statement, men formatet er opp til deg
-
-/*
-logdata = [{date: '2020/11/11', time: '12:34:56', reading: 8},
-            {date: '2015/10/10', time: '12:34:56', reading: 10},
-            {date: '2010/9/9', time: '12:34:56', reading: 24}];  // THIS WORKS
-*/
-
-/*Todo:
- Read function
- Read and increment function
- function to read from ESP
- */
 
 
-
-//  <!-- TODO: Add SDKs for Firebase products that you want to use
-//    https://firebase.google.com/docs/web/setup#available-libraries -->
-
-// ==   Functions for collecting data   ==
-
-
-
-
-
-// WORKS
 function getLogDataFromFirebase(client_name) {
   return new Promise((res, rej) => {
-    console.log("[logData]");
-    log_container = [];
     let endDate = getDate();
     let startDate = getDate(3);
     var ref = db.ref('ESP32-Data/' + client_name);
@@ -384,7 +329,6 @@ function getLogDataFromFirebase(client_name) {
   });
 }
 
-
 function getBarchartDataFromFirebase(client_name) {
   return new Promise((res, rej) => {
     var y_axis = [0,0,0,0,0,0,0,0];
@@ -396,7 +340,6 @@ function getBarchartDataFromFirebase(client_name) {
     for (let i=0; i<8; i++) {
 
       let day = getDate(i);
-
       var promise = new Promise((res, rej) => {
         var ref = db.ref('ESP32-Data/' + client_name);
         ref.orderByChild("date").startAt(day).endAt(day).on("value", function(snapshot) {
@@ -414,36 +357,51 @@ function getBarchartDataFromFirebase(client_name) {
           }
         })
         .catch((error) => {
-          console.log('[ERROR] error with INNER promise in: res_barchart');
+          console.log('[ERROR]');
           console.log(error);
         })
-    }
+      }
   });
 }
 
 
+function getLinechartData() {
+  return new Promise((res, rej) => {
+    let startDate = getDate(1);
+    let endDate = getDate();
 
+    var ref = db.ref('ESP32-Data/' + client_name);
+    ref
+      .orderByChild("date").startAt(startDate).endAt(endDate).on("child_added", function(snapshot) {
+
+        res({x_axis: x_axis, y_axis: y_axis});
+      });
+  });
+}
 
 
 function getLinechartDataFromFirebase(client_name) {
   return new Promise((res, rej) => {
     let startDate = getDate(1);
     let endDate = getDate();
+    console.log("===============");
+    console.log(endDate);
     let clock = getClock();
     let x_axis = formatXaxis(clock);
     var y_axis = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
                   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
                   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,]
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,];
 
     var ref = db.ref('ESP32-Data/' + client_name);
     ref
       .orderByChild("date").startAt(startDate).endAt(endDate).on("child_added", function(snapshot) {
 
         // Its yesterday after start time OR today
-        if ((snapshot.val().date === startDate && snapshot.val().time > clock) || snapshot.val().date === endDate) {
+        if ((snapshot.val().date == startDate && snapshot.val().time > clock) || snapshot.val().date === endDate) {
           let index = getIndex(snapshot.val().time, clock);
           y_axis[index] = snapshot.val().nivå;
+          console.log("NIVÅ: " + snapshot.val().nivå);
           console.log(index);
         }
         res({x_axis: x_axis, y_axis: y_axis});

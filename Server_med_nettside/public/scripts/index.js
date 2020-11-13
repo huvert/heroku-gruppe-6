@@ -3,6 +3,7 @@
 const HOST = "http://192.168.1.12:4000";
 const maxDataTableSize = 7; // How many readings the website should hold.
 var prev_data_reading;
+var selected_client;
 
 var clients = [];     // Stores clients by names (not ID)
 
@@ -74,6 +75,16 @@ $(function() {          // Waits for document to fully load before executing thi
     updateClientLogTable();
   });
 
+  $('#stop-button').click(() =>  {
+    console.log("STOP");
+    socket.emit("maintenance", `${selected_client}#0`);
+  });
+
+  $('#start-button').click(() => {
+    console.log("START");
+    socket.emit("maintenance", `${selected_client}#1`);
+  });
+
   $('#command-form').submit(function(e) {
     e.preventDefault();                             // prevents page reloading
     socket.emit('chat-message', $('#command-input').val());
@@ -135,6 +146,7 @@ $(function() {          // Waits for document to fully load before executing thi
   */
   function handleTDClick() {
     let client_name = $(this).html();
+    selected_client = client_name;
     // Visuals
     $("#client-log-table>tr>td.selected").removeClass("selected");
     $(this).addClass("selected");

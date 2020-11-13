@@ -15,7 +15,9 @@ socket.on("data->website", (data) => {
 socket.on("website", (data) => {
   console.log("data: ", data);
 });
-
+socket.on("maintenance", (data) => {
+  console.log(data);
+})
 
 // TEST
 socket.on('req-data', (data) => {
