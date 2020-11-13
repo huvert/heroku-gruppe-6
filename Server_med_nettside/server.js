@@ -1,5 +1,7 @@
 "use strict";
 
+const maxDataTableSize = 7;
+
 /*
 We first import http. socket.io (which will be our websocket,) is built upon http.
 The server will do as follows:
@@ -18,6 +20,10 @@ const io = require('socket.io')(http);
 const port = 4000;
 var available_rooms = ["website", "esp"];
 var date = new Date();
+var log_container = [];   // Used as a data container (prosess data in firebase)
+var barchart_container = [];
+var linechart_container = [];
+var c = 0;
 /*
   clients stores all clients connected to rooms "esp" and "website"
     structure:
@@ -26,17 +32,12 @@ var date = new Date();
 */
 var clients = {esp: [], website: []};
 
-// ==   Functions for collecting data   ==
-function getBarData(client_id) { //           <-- TODO: Get data from firebase
-  return 0
-}
 
-function getLogData(client_id) {     //           <-- TODO: Get data fom firebase
-  return 0
-}
 
-function getLinechartData(client_id) { //           <-- TODO: get data from firebase
-  return 0
+function pushAndShift(list) {
+  list.push(list[0]);
+  list.shift();
+  return list
 }
 
 // ==   Functions for keeping track of clients   ==
@@ -113,6 +114,11 @@ function getClock() {
   return `${hours}:${minutes}:${seconds}`  // format: 07:02:01
 }
 
+function getDate(days_from_today=0) {
+  updateTime();
+  return `${date.getYear()+1900}-${date.getMonth()+1}-${date.getDate()-days_from_today}`
+}
+
 function wrapDataWithClock(data) {
   data = data.toString();
   return `${data}#${getClock()}`
@@ -131,6 +137,17 @@ function wrapDataWithClockAndDate(data) {   // returns: data#day#month#year#05:2
   return `${wrapDataWithDate(data)}#${getClock()}`
 }
 
+function getListOfWeekdays() {
+  updateTime();
+  let weekdays = ['M','Ti','O','T','F','L','S'];    // 'Today'
+  let weekday = date.getDay();
+  for (let i=1; i<weekday; i++) {
+    weekdays.push(weekdays[0]);
+    weekdays.shift();
+  }
+  weekdays.push('Today');
+  return weekdays
+}
 
 
 // == Setting up server ==
@@ -207,46 +224,46 @@ io.sockets.on("connection", (socket) => {
     console.log("req-data-full");
     let client_id = getClientId(client_name);
 
-    // send log data
-    // TODO: FIREBASE
-    //        client_id above == socket.id of the client we want the data from.
-    //        if possible: Ask firebase for data matching this client ONLY.
+    getLogDataFromFirebase(client_name)
+      .then(container => {
+        socket.emit('res-data-log', JSON.stringify(container));
+      })
+      .catch(error => {
+        console.log('[ERROR] error when getting log data from firebase');
+        console.log(error);
+      });
 
-    // TODO: implement getLogData() function to return data from last 'x' number of indexes.
-    //        The line under is written in desired format. Sending this packet works.
-    //        Note the order of the timestands in the structure. This should match if possible. (highest on top)
-    let logdata = getLogData();
-    logdata = [{date: '2020/11/11', time: '12:34:56', reading: 8},
-                {date: '2015/10/10', time: '12:34:56', reading: 10},
-                {date: '2010/9/9', time: '12:34:56', reading: 24}];  // THIS WORKS
-    socket.emit('res-data-log', JSON.stringify(logdata));
 
-    // send barchart data
-    // TODO: implement getBarData();
-    //        Should send data in fomat: data = {x_axis: ['M',...'Today'], y_axis: [1,2,3...8]}
-    //        Sorter også ukedager slik at 'Today' passer i rekken. ex: Today == Tirsdag -->  x_axis: ['Ti' ... 'S','M','Today']
-    //        Grafen på nettsiden vil oppdateres hver dag kl. 00:00 og behandle data deretter.
-    //        I tillegg vil søyle 'Today' oppdateres on the fly
-    let barchartData = getBarData();
-    barchartData = {x_axis: ['M','Ti','O','T','F','L','S','Today'],
-                    y_axis: [10,9,8,7,5,6,7,4]}
-    socket.emit('res-data-barchart', JSON.stringify(barchartData));
+    getBarchartDataFromFirebase(client_name)
+      .then(y_axis => {
+        let x_axis = getListOfWeekdays();
+        let barchartData = {x_axis: x_axis, y_axis: y_axis}
+        socket.emit('res-data-barchart', JSON.stringify(barchartData));
+      })
+      .catch((error) => {
+        console.log('[ERROR] error when getting barchart data from firebase');
+        console.log(error);
+      })
+
+
+    getLinechartDataFromFirebase(client_name)
+      .then((linechartData) => {
+        console.log(linechartData);
+        console.log(linechartData.x_axis.length);
+        console.log(linechartData.y_axis.length);
+        fillLinechartData(linechartData);
+        socket.emit('res-data-linechart', JSON.stringify(linechartData));
+      })
+      .catch((error) => {
+        console.log('[ERROR] error when getting linechart data from firebase');
+        console.log(error);
+      })
 
     // send linechart data
     // TODO: implement getLineChartData();
     //        Same as with getBarData - x_axis should be sorted based on current time.
-    let linechartData = getLinechartData();
-    linechartData = {x_axis: ['00:00','','','','01:00','','','','02:00','','','','03:00','','','','04:00',
-                              '','','','05:00','','','','06:00','','','','07:00','','','','08:00','','','',
-                              '09:00','','','','10:00','','','','11:00','','','','12:00','','','','13:00',
-                              '','','','14:00','','','','15:00','','','','16:00','','','','17:00','','','',
-                              '18:00','','','','19:00','','','','20:00','','','','21:00','','','','22:00',
-                              '','','','23:00','','',''],
-                    y_axis: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,
-                              23,22,21,20,24,30,35,46,88,66,55,88,99,13,14,15,16,17,18,19,20,21,22,23,
-                              0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,
-                              0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,]}   // len: 24*4}
-    socket.emit('res-data-linechart', JSON.stringify(linechartData));
+
+    // socket.emit('res-data-linechart', JSON.stringify(linechartData));
   });
 
 
@@ -259,9 +276,8 @@ io.sockets.on("connection", (socket) => {
   socket.on('res-data', (data) => {             // Takes the data from esp and broadcasts
     let client_name = getClientName(socket.id);
     data = wrapDataWithClockAndDate(data);
-    writeEspData("1", "HEI");
-    console.log(client_name);
-    console.log(data);
+    console.log(`[NEW DATA] new data from ${client_name}: ${data}`);
+    writeEspData(client_name, data);
     socket.in('website').emit('data->website', data);
   });
   // -------------------------------------------------
@@ -274,7 +290,7 @@ io.sockets.on("connection", (socket) => {
 // Request data from all ESP clients    (Not sure if this is going to be used)
 setInterval(() => {
   io.in('esp').emit('req-data', null);
-}, 10000);
+}, 1000000);
 
 
 
@@ -296,29 +312,26 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var db = firebase.database();
 
-function writeEspData(espID, espData) {
+function writeEspData(client_name, espData) {
   var data = espData;
   var parse =data.split('#');
 
-  db.ref('ESP32-Data/').push({
+  db.ref('ESP32-Data/' + client_name).push({
     date: parse[3]+'-'+parse[2]+'-'+parse[1],
     time: parse[4],
-    esp: espID,
     nivå: Number(parse[0]),
 
   });
 }
 //example: writeEspData("ESP 1", "50#12#11#2020#15:47")
 
-function queryItemByDateRange(startDate, endDate) {
 
-  var ref = db.ref('ESP32-Data');
-  ref.orderByChild("date").startAt(startDate).endAt(endDate).on("child_added", function(snapshot) {
-    console.log('dato ' + snapshot.val().date + '. Gjenstående nivå ' + snapshot.val().nivå);
-  });
-}
 //gets items in date range
 //example: queryItemByDateRange("2019-11-12","2020-11-11")
+
+
+
+
 
 function queryDB(){
   var ref = firebase.database().ref('ESP32-Data');
@@ -331,7 +344,11 @@ function queryDB(){
 
 //Disse trenger return statement, men formatet er opp til deg
 
-
+/*
+logdata = [{date: '2020/11/11', time: '12:34:56', reading: 8},
+            {date: '2015/10/10', time: '12:34:56', reading: 10},
+            {date: '2010/9/9', time: '12:34:56', reading: 24}];  // THIS WORKS
+*/
 
 /*Todo:
  Read function
@@ -343,3 +360,143 @@ function queryDB(){
 
 //  <!-- TODO: Add SDKs for Firebase products that you want to use
 //    https://firebase.google.com/docs/web/setup#available-libraries -->
+
+// ==   Functions for collecting data   ==
+
+
+
+
+
+// WORKS
+function getLogDataFromFirebase(client_name) {
+  return new Promise((res, rej) => {
+    console.log("[logData]");
+    log_container = [];
+    let endDate = getDate();
+    let startDate = getDate(3);
+    var ref = db.ref('ESP32-Data/' + client_name);
+    var container = [];
+
+    ref.orderByChild("date").startAt(startDate).endAt(endDate).on("child_added", function(snapshot) {
+      container.unshift({date: snapshot.val().date, time: snapshot.val().time, reading: snapshot.val().nivå});
+      res(container);
+    });
+  });
+}
+
+
+function getBarchartDataFromFirebase(client_name) {
+  return new Promise((res, rej) => {
+    var y_axis = [0,0,0,0,0,0,0,0];
+
+    // Loops over 8 last days
+    // 1. (in loop) Reads number of data readings per day
+    // 2. (in loop) Sorts this data into y_axis list
+    // 3. Place x_axis and y_axis into object and send to website.
+    for (let i=0; i<8; i++) {
+
+      let day = getDate(i);
+
+      var promise = new Promise((res, rej) => {
+        var ref = db.ref('ESP32-Data/' + client_name);
+        ref.orderByChild("date").startAt(day).endAt(day).on("value", function(snapshot) {
+          let number_of_readings = snapshot.numChildren();
+          res(number_of_readings);
+        });
+      })
+
+      promise
+        .then((n) => {
+          y_axis[7-i] = n;
+          if (i === 7) {
+            console.log(y_axis);
+            res(y_axis);
+          }
+        })
+        .catch((error) => {
+          console.log('[ERROR] error with INNER promise in: res_barchart');
+          console.log(error);
+        })
+    }
+  });
+}
+
+
+
+
+
+function getLinechartDataFromFirebase(client_name) {
+  return new Promise((res, rej) => {
+    let startDate = getDate(1);
+    let endDate = getDate();
+    let clock = getClock();
+    let x_axis = formatXaxis(clock);
+    var y_axis = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,]
+
+    var ref = db.ref('ESP32-Data/' + client_name);
+    ref
+      .orderByChild("date").startAt(startDate).endAt(endDate).on("child_added", function(snapshot) {
+
+        // Its yesterday after start time OR today
+        if ((snapshot.val().date === startDate && snapshot.val().time > clock) || snapshot.val().date === endDate) {
+          let index = getIndex(snapshot.val().time, clock);
+          y_axis[index] = snapshot.val().nivå;
+          console.log(index);
+        }
+        res({x_axis: x_axis, y_axis: y_axis});
+      });
+  });
+}
+
+function getIndex(time, current_time) {
+  time = time.split(":");
+  current_time = current_time.split(":");
+  time[0] = time[0] - current_time[0];
+  time[1] = Math.floor((time[1] - current_time[1])/15);
+  return 96 + time[0]*4 + time[1]
+}
+
+function formatXaxis(current_clock) { // time comes in in format: "h:min:sek"
+  let clock = current_clock.split(":");
+  let n = Math.floor(clock[1]/15);
+  let hour = `${clock[0]}:00`
+  let x_axis = ['00:00','','','','01:00','','','','02:00','','','','03:00','','','','04:00',
+                '','','','05:00','','','','06:00','','','','07:00','','','','08:00','','','',
+                '09:00','','','','10:00','','','','11:00','','','','12:00','','','','13:00',
+                '','','','14:00','','','','15:00','','','','16:00','','','','17:00','','','',
+                '18:00','','','','19:00','','','','20:00','','','','21:00','','','','22:00',
+                '','','','23:00','','',''];
+  // Uses for loops instead of while to prevent it from getting stuck due to
+  // unforseen bugs.
+  for (let i=0; i<100; i++) {
+    pushAndShift(x_axis);
+    if (x_axis[0] === hour) {
+      for (let ii=0; ii<n+1; ii++) {
+        pushAndShift(x_axis);
+      }
+      break;
+    }
+  }
+  return x_axis
+}
+
+function fillLinechartData(linechartData) {
+  // Find first reading
+  let prev_val;
+  linechartData.y_axis.forEach(data => {
+    if (data !== 0 && prev_val === undefined) {
+      prev_val = data;
+    }
+  });
+  for (let i=0; i<linechartData.y_axis.length; i++) {
+    if (linechartData.y_axis[i] === 0) {
+      linechartData.y_axis[i] = prev_val;
+    }
+    else {
+      prev_val = linechartData.y_axis[i];
+    }
+  }
+}

@@ -90,16 +90,19 @@ $(function() {          // Waits for document to fully load before executing thi
   });
 
   socket.on('res-data-log', (data) => {
+    console.log("[res-data-log]");
     data = JSON.parse(data);
     log.loadTable(data);
   });
 
   socket.on('res-data-barchart', (data) => {
+    console.log("[res-data-barchart]");
     data = JSON.parse(data);
     loadBarChart(data);
   });
 
   socket.on('res-data-linechart', (data) => {
+    console.log("[res-data-linechart]");
     data = JSON.parse(data);
     loadLineChart(data);
   });
