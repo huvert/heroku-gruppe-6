@@ -138,6 +138,7 @@ table {
 
 #data-log-table {}   /* Used by jquery */
 
+
 /* -- Window: Data Visualization -- */
 #window-data {
   background-color: #32e0c4;
@@ -167,25 +168,34 @@ table {
   height: 100%;
   width: 100%;
   z-index: 2;
+  margin: 0;
+}
+.client-panel {
+  height: 100%;
+  width: 100%;
+  margin: 0;
 }
 
 .client-main-box {
+  overflow: hidden;
+  overflow-y: scroll;
+  height: 50%;
+  margin: 8% 8% 0% 8%;
+}
+
+.responsive-main-box {
   background-color: #14b2b8;
   border-radius: 10px;
   border: 2px solid black;
   width: 30%;
-  height: 50%;
-  margin: 8%;
-  overflow: hidden;
-  overflow-y: scroll;
 }
 @media screen and (max-width: 1300px){
-  .client-main-box {
+  .responsive-main-box {
     width: 50%;
   }
 }
 @media screen and (max-width: 1024px){
-  .client-main-box {
+  .responsive-main-box {
     width: 80%;
   }
 }
@@ -218,6 +228,32 @@ table {
   height: 70px;
 }
 
+#servo-btn-panel {
+  display: none;
+}
+.servo-buttons-container {
+  display: flex;
+  height: 10%;
+  margin: 2% 8% 0% 8%;
+}
+.servo-buttons-child-1 {
+  width: 30%;
+  height: 100%;
+}
+.servo-buttons-child-2 {
+  width: 70%;
+  height: 100%;
+  padding-left: 10%;
+}
+
+.servo-btn {
+  margin: 5% 2%;
+  height: 60%;
+  width: 40%;
+  border: 1px solid black;
+}
+
+
 
 /* --- Background image --- */
 .bg-img {
@@ -225,9 +261,11 @@ table {
   max-width: 100%;
 }
 
+
+
 /* --- Footer --- */
 .footer {
-  position: absolute;
+  position: fixed;
   botton: 0;
   background-color: #212121;
   height: 80px;

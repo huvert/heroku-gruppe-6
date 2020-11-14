@@ -1,5 +1,7 @@
 "use strict";
 
+//import * as timelib from './lib/server-libs/timelib.js'
+
 const maxDataTableSize = 7;
 
 /*
@@ -11,17 +13,18 @@ The server will do as follows:
 
 BTW the code may be overkill commented. Will fix this as a last finish.
 */
+// require my custom-made libraries
+const time = require('./lib/server-libs/timelib.js');
+
 var firebase = require('firebase');
-const express = require("express");
+const express = require('express');
 const app = express();
-const http = require("http").createServer(app);
+const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
 const port = 4000;
 var available_rooms = ["website", "esp"];
 var date = new Date();
-var barchart_container = [];
-var linechart_container = [];
 var c = 0;
 /*
   clients stores all clients connected to rooms "esp" and "website"
@@ -38,6 +41,57 @@ function pushAndShift(list) {
   list.shift();
   return list
 }
+
+// ==       Time        ==
+function updateTime() {
+  date = new Date();
+}
+
+function getClock() {
+  updateTime();
+  let hours = date.getHours();
+  let minutes = date.getMinutes();
+  let seconds = date.getSeconds();
+  hours = hours < 10 ? '0'+hours : hours;
+  minutes = minutes < 10 ? '0'+minutes : minutes;
+  seconds = seconds < 10 ? '0'+seconds : seconds;
+  return `${hours}:${minutes}:${seconds}`  // format: 07:02:01
+}
+
+function getDate(days_from_today=0) {
+  updateTime();
+  return `${date.getYear()+1900}-${date.getMonth()+1}-${date.getDate()-days_from_today}`
+}
+
+function wrapDataWithClock(data) {
+  data = data.toString();
+  return `${data}#${getClock()}`
+}
+
+function wrapDataWithDate(data) {
+  data = data.toString();
+  let dato = date.getDate();
+  let month = date.getMonth()+1;
+  dato = dato < 10 ? '0'+dato : dato;
+  month = month < 10 ? '0'+month : month;
+  return `${data}#${dato}#${month}#${date.getYear()+1900}`
+}
+
+function wrapDataWithClockAndDate(data) {   // returns: data#day#month#year#05:20:40
+  return `${wrapDataWithDate(data)}#${getClock()}`
+}
+
+function getListOfWeekdays() {
+  updateTime();
+  let weekdays = ['M','Ti','O','T','F','L','S'];    // 'Today'
+  let weekday = date.getDay();
+  for (let i=1; i<weekday; i++) {
+    pushAndShift(weekdays);
+  }
+  weekdays.push('Today');
+  return weekdays
+}
+
 
 // ==   Functions for keeping track of clients   ==
 function createClientName(name) {
@@ -97,57 +151,6 @@ function getClientName(clientId) {
 }
 
 
-// ==       Time        ==
-function updateTime() {
-  date = new Date();
-}
-
-function getClock() {
-  updateTime();
-  let hours = date.getHours();
-  let minutes = date.getMinutes();
-  let seconds = date.getSeconds();
-  hours = hours < 10 ? '0'+hours : hours;
-  minutes = minutes < 10 ? '0'+minutes : minutes;
-  seconds = seconds < 10 ? '0'+seconds : seconds;
-  return `${hours}:${minutes}:${seconds}`  // format: 07:02:01
-}
-
-function getDate(days_from_today=0) {
-  updateTime();
-  return `${date.getYear()+1900}-${date.getMonth()+1}-${date.getDate()-days_from_today}`
-}
-
-function wrapDataWithClock(data) {
-  data = data.toString();
-  return `${data}#${getClock()}`
-}
-
-function wrapDataWithDate(data) {
-  data = data.toString();
-  let dato = date.getDate();
-  let month = date.getMonth()+1;
-  dato = dato < 10 ? '0'+dato : dato;
-  month = month < 10 ? '0'+month : month;
-  return `${data}#${dato}#${month}#${date.getYear()+1900}`
-}
-
-function wrapDataWithClockAndDate(data) {   // returns: data#day#month#year#05:20:40
-  return `${wrapDataWithDate(data)}#${getClock()}`
-}
-
-function getListOfWeekdays() {
-  updateTime();
-  let weekdays = ['M','Ti','O','T','F','L','S'];    // 'Today'
-  let weekday = date.getDay();
-  for (let i=1; i<weekday; i++) {
-    weekdays.push(weekdays[0]);
-    weekdays.shift();
-  }
-  weekdays.push('Today');
-  return weekdays
-}
-
 
 // == Setting up server ==
 app.use(express.static(__dirname + '/public/'));                   // Tells express where to look for files (such as stylesheets)
@@ -162,8 +165,6 @@ app.get('*', (req, res) => {
 http.listen(port, () => {
   console.log('Listening on port: ' + port);
 });
-
-
 
 
 // ==========================================
@@ -250,9 +251,6 @@ io.sockets.on("connection", (socket) => {
 
     getLinechartDataFromFirebase(client_name)
       .then((linechartData) => {
-        console.log(linechartData);
-        console.log(linechartData.x_axis.length);
-        console.log(linechartData.y_axis.length);
         fillLinechartData(linechartData);
         socket.emit('res-data-linechart', JSON.stringify(linechartData));
       })
@@ -269,7 +267,7 @@ io.sockets.on("connection", (socket) => {
     data = wrapDataWithClockAndDate(data);
     console.log(`[NEW DATA] new data from ${client_name}: ${data}`);
     writeEspData(client_name, data);
-    socket.in('website').emit('data->website', data);
+    socket.in('website').emit('data->website', `${data}#${client_name}`);
   });
 });
 
@@ -365,60 +363,53 @@ function getBarchartDataFromFirebase(client_name) {
 }
 
 
-function getLinechartData() {
-  return new Promise((res, rej) => {
-    let startDate = getDate(1);
-    let endDate = getDate();
-
-    var ref = db.ref('ESP32-Data/' + client_name);
-    ref
-      .orderByChild("date").startAt(startDate).endAt(endDate).on("child_added", function(snapshot) {
-
-        res({x_axis: x_axis, y_axis: y_axis});
-      });
-  });
-}
-
-
 function getLinechartDataFromFirebase(client_name) {
   return new Promise((res, rej) => {
     let startDate = getDate(1);
     let endDate = getDate();
-    console.log("===============");
-    console.log(endDate);
     let clock = getClock();
     let x_axis = formatXaxis(clock);
-    var y_axis = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,];
+    var y_axis = [NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,
+                  NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,
+                  NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,
+                  NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,];
 
     var ref = db.ref('ESP32-Data/' + client_name);
-    ref
-      .orderByChild("date").startAt(startDate).endAt(endDate).on("child_added", function(snapshot) {
+    ref.orderByChild("date").startAt(startDate).endAt(endDate).on("child_added", function(snapshot) {
 
         // Its yesterday after start time OR today
         if ((snapshot.val().date == startDate && snapshot.val().time > clock) || snapshot.val().date === endDate) {
           let index = getIndex(snapshot.val().time, clock);
           y_axis[index] = snapshot.val().nivå;
-          console.log("NIVÅ: " + snapshot.val().nivå);
-          console.log(index);
         }
         res({x_axis: x_axis, y_axis: y_axis});
       });
   });
 }
 
+// Finds the proper index for the data of linechart.
+// x_axis has a steplength of 15minutes.
 function getIndex(time, current_time) {
-  time = time.split(":");
-  current_time = current_time.split(":");
-  time[0] = time[0] - current_time[0];
-  time[1] = Math.floor((time[1] - current_time[1])/15);
-  return 96 + time[0]*4 + time[1]
+  time = time.split(":");                   // [hours, minutes]
+  current_time = current_time.split(":");   // [hours, minutes]
+  time[0] = parseInt(time[0]);
+  time[1] = parseInt(time[1]);
+  current_time[0] = parseInt(current_time[0]);
+  current_time[1] = parseInt(current_time[1]);
+
+  // Check if data is from yesterday or today
+  if (time[0] > current_time[0]) {
+    time[0] = 24 - time[0] + current_time[0];
+  }
+  else {
+    time[0] = current_time[0] - time[0];
+  }
+  time[1] = (time[0]-(time[0]%15))/15 - (current_time[0]-(current_time[0]%15))/15;
+  return 95 - (time[0]*4) + time[1]
 }
 
-function formatXaxis(current_clock) { // time comes in in format: "h:min:sek"
-  let clock = current_clock.split(":");
+function formatXaxis(current_clock) {   // in format: "h:min:sek"
+  let clock = current_clock.split(":"); // in format: [h, min, sek]
   let n = Math.floor(clock[1]/15);
   let hour = `${clock[0]}:00`
   let x_axis = ['00:00','','','','01:00','','','','02:00','','','','03:00','','','','04:00',
@@ -443,14 +434,17 @@ function formatXaxis(current_clock) { // time comes in in format: "h:min:sek"
 
 function fillLinechartData(linechartData) {
   // Find first reading
+  console.log("[FILL]");
   let prev_val;
   linechartData.y_axis.forEach(data => {
-    if (data !== 0 && prev_val === undefined) {
+    if (!Number.isNaN(data) && prev_val === undefined) {
+
       prev_val = data;
+      console.log(prev_val);
     }
   });
   for (let i=0; i<linechartData.y_axis.length; i++) {
-    if (linechartData.y_axis[i] === 0) {
+    if (Number.isNaN(linechartData.y_axis[i])) {
       linechartData.y_axis[i] = prev_val;
     }
     else {
@@ -458,3 +452,25 @@ function fillLinechartData(linechartData) {
     }
   }
 }
+
+
+
+
+// REMAKE
+/*
+function getLinechartData(client_name) {
+  return new Promise((res, rej) => {
+    let startDate = getDate(1);
+    let endDate = getDate();
+    let x_axis = [];
+    let y_axis = [];
+
+    var ref = db.ref('ESP32-Data/' + client_name);
+    ref.orderByChild("date").startAt(startDate).endAt(endDate).on("child_added", function(snapshot) {
+        x_axis.push(snapshot.val().time);
+        y_axis.push(snapshot.val().nivå);
+        res({x_axis: x_axis, y_axis: y_axis});
+      });
+  });
+}
+*/

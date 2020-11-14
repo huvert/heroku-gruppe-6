@@ -37,7 +37,11 @@ function removeData(chart) {
     chart.data.datasets[0].data.shift();
 }
 
-
+function pushAndShift(list) {
+  list.push(list[0]);
+  list.shift();
+  return list
+}
 
 
 
@@ -67,7 +71,12 @@ var linechart = new Chart(ctx, {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-
+      yAxes: [{
+        ticks: {
+          suggestedMin: 0,
+          suggestedMax: 100
+        }
+      }]
     }
 });
 
@@ -83,13 +92,12 @@ function getTimestamp() {
 
 function updateLineChart() {
   let new_label = '';
-  let new_data = dataTable[dataTable.length-1].reading;  // Last received value from client
   current_time = new Date();
   if (current_time.getMinutes() == 0) {   // Update label hver time.
     new_label = getTimestamp();
   }
   removeData(linechart);
-  addData(linechart, new_label, new_data);
+  addData(linechart, new_label, prev_data_reading);
 }
 
 // When receiving new data from client the linechart should update y-axis
@@ -100,7 +108,6 @@ function updateLineChartData(data) {
   linechart.update();
 }
 
-// TODO: create functions that takes data from FIREBASE and updates entire Chart
 // Lenght of x-axis should be 24 * 4 = 96
 function loadLineChart(data) {
   linechart.data.datasets[0].data = data.y_axis;
@@ -114,9 +121,6 @@ setTimeout(() => {
     updateLineChart();
   }, 15*60*1000);               // Hvert kvarter: 15*60*1000
 }, timeFuncs.getInitTime()*1000);
-
-
-
 
 
 
@@ -157,9 +161,7 @@ var barchart = new Chart(ctx_bar, {
 // Update barchart when passing midnight (00:00)
 function barChartNewDay() {
   // Update colors
-  let new_color = barchart.data.datasets[0].backgroundColor[0];
-  barchart.data.datasets[0].backgroundColor.shift();
-  barchart.data.datasets[0].backgroundColor.push(new_color);
+  pushAndShift(barchart.data.datasets[0].backgroundColor);
   // Update label "Today" -> ex: "M".
   barchart.data.labels[barchart.data.labels.length - 1] = barchart.data.labels[0];
   // Update data

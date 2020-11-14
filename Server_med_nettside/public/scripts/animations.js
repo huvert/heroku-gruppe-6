@@ -15,7 +15,7 @@ var animations = {
     }
     if (filter !== "client-log") {
       $(".main-container").css("z-index","1");
-      $(".client-main-box").hide();
+      $(".client-panel").hide();
     }
   }
 };
@@ -27,7 +27,7 @@ $(function() {          // Waits for document to fully load before executing any
     animations.hide_all_windows();
     setTimeout(()=> {
       $(".main-container").css("z-index","3");
-      $(".client-main-box").slideDown(200);
+      $(".client-panel").slideDown(200);
     },300);
   });
 

@@ -97,25 +97,29 @@
 
     <!-- Client-List on main window -->
     <div class="main-container">
-      <div class="client-main-box">
-        <table>
-          <thread>
-            <tr>
-              <th><h4>Klienter</h4></th>
-            </tr>
-          </thread>
-          <tbody id="client-log-table"></tbody>
-        </table>
+      <div class="client-panel">
+        <div class="responsive-main-box client-main-box">
+          <table>
+            <thread>
+              <tr>
+                <th><h4>Klienter</h4></th>
+              </tr>
+            </thread>
+            <tbody id="client-log-table"></tbody>
+          </table>
       </div>
 
-      <div><h4>Servo</h4></div>
-      <div>
-        <button type="button" class="btn btn-success" id="start-button">START</button>
-      </div>
-      <div>
-        <button type="button" class="btn btn-danger" id="stop-button">STOP</button>
-      </div>
+        <div id="servo-btn-panel">
+          <div class="responsive-main-box servo-buttons-container">
+            <div class="servo-buttons-child-1"><h4>Servo</h4></div>
+            <div class="servo-buttons-child-2">
+              <button type="button" class="btn btn-success servo-btn" id="start-button">START</button>
+              <button type="button" class="btn btn-danger servo-btn" id="stop-button">STOP</button>
+            </div>
+          </div>
+        </div>
 
+      </div>
     </div>
 
   </div>

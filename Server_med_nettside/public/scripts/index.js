@@ -6,11 +6,7 @@ var prev_data_reading;
 var selected_client;
 
 var clients = [];     // Stores clients by names (not ID)
-
-var dataTable = [
-  { date: 'test1', time: 'test2', reading: 'test3' },   // DELETE
-  { date: 'test', time: 'test', reading: 'test' },      // DELETE     Access last index of reading by: dataTable[dataTable.length-1].reading
-];         // Stores data log
+var dataTable = [];         // Stores data log
 
 
 // ===    Global Functions    ===
@@ -23,10 +19,12 @@ function handleData(data) {
 }
 
 
-// ===    Functions for Log (logg on navbar)   ===
+// ===    Functions for Log (logg tab on navbar)   ===
 var log = {
   indexCounter: 0,                 // Keeps track on # of indexes
-  loadTable: function(dataTable) {     // Edit this function to request table from server (FIREBASE). This would be the ENITRE TABLE.
+
+  loadTable: function(dataTable) {
+    prev_data_reading = dataTable[0].reading; // Update global variable
     let dataHtml = '';
     for(let data of dataTable) {
       log.indexCounter = log.indexCounter+1;
@@ -34,6 +32,7 @@ var log = {
     }
     $("#data-log-table").html(dataHtml);
   },
+
   formatData: function(data) {
     let formated_data = (`<tr id="index${log.indexCounter}">
                           <td>${data.date}</td>
@@ -41,6 +40,7 @@ var log = {
                           <td>${data.reading}%</td></tr>`);
     return formated_data
   },
+
   update: function(data) {
     // input format:      [int, "day", "month", "year", "clock"]
     // Convert to format: {date: "", time: "", reading: int}
@@ -70,8 +70,8 @@ $(function() {          // Waits for document to fully load before executing thi
   socket.emit("join-room", "website");  // Request to join room: website
   socket.emit("req-client-list", "");   // require full list of "esp" clients connected to server
   socket.on("res-client-list", (clients_list) => {
-    clients = JSON.parse(clients_list);
     console.log("[res-client-list] Updating client list");
+    clients = JSON.parse(clients_list);
     updateClientLogTable();
   });
 
@@ -93,11 +93,16 @@ $(function() {          // Waits for document to fully load before executing thi
   });
 
   // Nest the new data into existing data
-  socket.on("data->website", (data) => {     // data comes in format: "måling#day#month#year#clock"
-    let cnt = handleData(data);  // returns list: ["måling","day","month","year","clock"]
-    log.update(cnt);
-    updateBarChart();
-    updateLineChartData(prev_data_reading);     // Update linechart
+  socket.on("data->website", (data) => {  //in format: "måling#day#month#year#clock#client_name"
+    let cnt = handleData(data);           //in format: ["måling","day","month","year","clock","client_name"]
+    // Only handle data if from selceted client
+    if (data[data.length-1] === selected_client) {
+      console.log("[data->website] New livedata received");
+      cnt.pop();
+      log.update(cnt);
+      updateBarChart();
+      updateLineChartData(prev_data_reading);     // Update linechart
+    }
   });
 
   socket.on('res-data-log', (data) => {
@@ -117,6 +122,7 @@ $(function() {          // Waits for document to fully load before executing thi
     data = JSON.parse(data);
     loadLineChart(data);
   });
+
 
   // --   Functions for KLIENTER table on front page   --
 
@@ -150,6 +156,7 @@ $(function() {          // Waits for document to fully load before executing thi
     // Visuals
     $("#client-log-table>tr>td.selected").removeClass("selected");
     $(this).addClass("selected");
+    $("#servo-btn-panel").show();
     // Request data from server
     socket.emit("req-data-full", client_name);
     console.log("req-data-full from: " + client_name);
