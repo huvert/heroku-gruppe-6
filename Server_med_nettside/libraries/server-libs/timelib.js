@@ -1,10 +1,17 @@
-// ==       Time        ==
-function updateTime() {
+/*
+  This library is made specific for managing time and
+  wrapping data with timestamps etc.
+  NOTE: this is not a library that you can import and use in any project.
+        We split the project into libraries to easier keep track on files and
+        functions.
+*/
+
+function _updateTime() {
   date = new Date();
 }
 
 function getClock() {
-  updateTime();
+  _updateTime();
   let hours = date.getHours();
   let minutes = date.getMinutes();
   let seconds = date.getSeconds();
@@ -15,7 +22,7 @@ function getClock() {
 }
 
 function getDate(days_from_today=0) {
-  updateTime();
+  _updateTime();
   return `${date.getYear()+1900}-${date.getMonth()+1}-${date.getDate()-days_from_today}`
 }
 
@@ -38,12 +45,26 @@ function wrapDataWithClockAndDate(data) {   // returns: data#day#month#year#05:2
 }
 
 function getListOfWeekdays() {
-  updateTime();
+  _updateTime();
   let weekdays = ['M','Ti','O','T','F','L','S'];    // 'Today'
   let weekday = date.getDay();
   for (let i=1; i<weekday; i++) {
-    pushAndShift(weekdays);
+    _pushAndShift(weekdays);
   }
   weekdays.push('Today');
   return weekdays
 }
+
+function _pushAndShift(list) {
+  list.push(list[0]);
+  list.shift();
+  return list
+}
+
+
+module.exports = {
+  getClock,
+  getDate,
+  wrapDataWithClockAndDate,
+  getListOfWeekdays,
+};

@@ -14,7 +14,7 @@ The server will do as follows:
 BTW the code may be overkill commented. Will fix this as a last finish.
 */
 // require my custom-made libraries
-const time = require('./lib/server-libs/timelib.js');
+const time = require('./libraries/server-libs/timelib.js');
 
 var firebase = require('firebase');
 const express = require('express');
@@ -35,63 +35,11 @@ var c = 0;
 var clients = {esp: [], website: []};
 
 
-
 function pushAndShift(list) {
   list.push(list[0]);
   list.shift();
   return list
 }
-
-// ==       Time        ==
-function updateTime() {
-  date = new Date();
-}
-
-function getClock() {
-  updateTime();
-  let hours = date.getHours();
-  let minutes = date.getMinutes();
-  let seconds = date.getSeconds();
-  hours = hours < 10 ? '0'+hours : hours;
-  minutes = minutes < 10 ? '0'+minutes : minutes;
-  seconds = seconds < 10 ? '0'+seconds : seconds;
-  return `${hours}:${minutes}:${seconds}`  // format: 07:02:01
-}
-
-function getDate(days_from_today=0) {
-  updateTime();
-  return `${date.getYear()+1900}-${date.getMonth()+1}-${date.getDate()-days_from_today}`
-}
-
-function wrapDataWithClock(data) {
-  data = data.toString();
-  return `${data}#${getClock()}`
-}
-
-function wrapDataWithDate(data) {
-  data = data.toString();
-  let dato = date.getDate();
-  let month = date.getMonth()+1;
-  dato = dato < 10 ? '0'+dato : dato;
-  month = month < 10 ? '0'+month : month;
-  return `${data}#${dato}#${month}#${date.getYear()+1900}`
-}
-
-function wrapDataWithClockAndDate(data) {   // returns: data#day#month#year#05:20:40
-  return `${wrapDataWithDate(data)}#${getClock()}`
-}
-
-function getListOfWeekdays() {
-  updateTime();
-  let weekdays = ['M','Ti','O','T','F','L','S'];    // 'Today'
-  let weekday = date.getDay();
-  for (let i=1; i<weekday; i++) {
-    pushAndShift(weekdays);
-  }
-  weekdays.push('Today');
-  return weekdays
-}
-
 
 // ==   Functions for keeping track of clients   ==
 function createClientName(name) {
@@ -240,7 +188,7 @@ io.sockets.on("connection", (socket) => {
 
     getBarchartDataFromFirebase(client_name)
       .then(y_axis => {
-        let x_axis = getListOfWeekdays();
+        let x_axis = time.getListOfWeekdays();
         let barchartData = {x_axis: x_axis, y_axis: y_axis}
         socket.emit('res-data-barchart', JSON.stringify(barchartData));
       })
@@ -264,7 +212,7 @@ io.sockets.on("connection", (socket) => {
   // Got data from ESP
   socket.on('res-data', (data) => {             // Takes the data from esp and broadcasts
     let client_name = getClientName(socket.id);
-    data = wrapDataWithClockAndDate(data);
+    data = time.wrapDataWithClockAndDate(data);
     console.log(`[NEW DATA] new data from ${client_name}: ${data}`);
     writeEspData(client_name, data);
     socket.in('website').emit('data->website', `${data}#${client_name}`);
@@ -315,8 +263,8 @@ function queryDB(){
 
 function getLogDataFromFirebase(client_name) {
   return new Promise((res, rej) => {
-    let endDate = getDate();
-    let startDate = getDate(3);
+    let endDate = time.getDate();
+    let startDate = time.getDate(3);
     var ref = db.ref('ESP32-Data/' + client_name);
     var container = [];
 
@@ -337,7 +285,7 @@ function getBarchartDataFromFirebase(client_name) {
     // 3. Place x_axis and y_axis into object and send to website.
     for (let i=0; i<8; i++) {
 
-      let day = getDate(i);
+      let day = time.getDate(i);
       var promise = new Promise((res, rej) => {
         var ref = db.ref('ESP32-Data/' + client_name);
         ref.orderByChild("date").startAt(day).endAt(day).on("value", function(snapshot) {
@@ -365,9 +313,9 @@ function getBarchartDataFromFirebase(client_name) {
 
 function getLinechartDataFromFirebase(client_name) {
   return new Promise((res, rej) => {
-    let startDate = getDate(1);
-    let endDate = getDate();
-    let clock = getClock();
+    let startDate = time.getDate(1);
+    let endDate = time.getDate();
+    let clock = time.getClock();
     let x_axis = formatXaxis(clock);
     var y_axis = [NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,
                   NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,
@@ -460,8 +408,8 @@ function fillLinechartData(linechartData) {
 /*
 function getLinechartData(client_name) {
   return new Promise((res, rej) => {
-    let startDate = getDate(1);
-    let endDate = getDate();
+    let startDate = time.getDate(1);
+    let endDate = time.getDate();
     let x_axis = [];
     let y_axis = [];
 
